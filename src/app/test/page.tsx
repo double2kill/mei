@@ -34,8 +34,9 @@ function formatSeconds(s: number) {
 }
 
 function optionsToCells(options: QuizOption[]): Cell[] {
-  return shuffle(options).map((o, i) => ({
-    key: `${o.id}-${i}-${Math.random().toString(36).slice(2, 9)}`,
+  const shuffled = shuffle(options);
+  return shuffled.map((o, i) => ({
+    key: `${o.id}:${i}`,
     name: o.name,
     safe: !o.isMine,
   }));
@@ -43,9 +44,7 @@ function optionsToCells(options: QuizOption[]): Cell[] {
 
 export default function TestPage() {
   const [cfg, setCfg] = useState<QuizConfig>(() => defaultQuizConfig());
-  const [cells, setCells] = useState<Cell[]>(() =>
-    optionsToCells(defaultQuizConfig().options),
-  );
+  const [cells, setCells] = useState<Cell[]>([]);
   const [revealedSafe, setRevealedSafe] = useState<Set<string>>(
     () => new Set(),
   );

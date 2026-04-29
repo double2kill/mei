@@ -23,6 +23,63 @@ export const QUIZ_RAW: QuizCellSource[] = [
   { order: 16, name: "捣蛋鬼", safe: true },
 ];
 
+export function shuffle<T>(arr: T[]): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+const MINE_TAUNT_LINES = [
+  "恭喜你成功抽中女巫的毒药，今晚KPI：躺平",
+  "很遗憾但也很荣幸，你是本轮唯一中毒玩家",
+  "恭喜爆雷！女巫精准点名你，直接带走",
+  "中奖啦！奖品是：女巫特调一杯（永久有效）",
+  "手气不错，一发入魂，毒药直达",
+  "恭喜触发隐藏结局：当场蒸发",
+  "你中奖了，不过是“反向人生大奖”",
+  "女巫看了你一眼，然后你就没了",
+  "恭喜成为毒药体验官，仅此一位",
+  "你抽中的不是数字，是命运的终点",
+  "爆冷！你成功避开所有安全选项",
+  "恭喜解锁：开局即退场成就",
+  "女巫：就你了，别问为什么",
+  "你这运气，连毒药都精准导航",
+  "恭喜成为本局最短生命周期选手",
+  "中奖提示：请立即停止呼吸（bushi）",
+  "你不是踩雷，是雷长你脚下",
+  "恭喜进入观战模式，无需操作",
+  "女巫：别人是概率，你是必然",
+  "你抽到的不是毒药，是结局快进键",
+] as const;
+
+export function pickRandomMineTaunt(): string {
+  const i = Math.floor(Math.random() * MINE_TAUNT_LINES.length);
+  return MINE_TAUNT_LINES[i] ?? MINE_TAUNT_LINES[0];
+}
+
+export type QuizSeedMineMode = "fixed" | "randomSingle";
+
+export function optionsFromQuizSeed(mineMode: QuizSeedMineMode): QuizOption[] {
+  if (mineMode === "fixed") {
+    return QUIZ_RAW.map((r) => ({
+      id: `seed-${r.order}`,
+      name: r.name,
+      isMine: !r.safe,
+    }));
+  }
+  const list = QUIZ_RAW.map((r) => ({
+    id: `seed-${r.order}`,
+    name: r.name,
+    isMine: false,
+  }));
+  if (list.length === 0) return list;
+  const idx = Math.floor(Math.random() * list.length);
+  return list.map((o, i) => ({ ...o, isMine: i === idx }));
+}
+
 export const DEFAULT_TITLE = "女巫的毒药 1（湄师傅 杭城小师赛）";
 export const DEFAULT_DESC =
   "以下有一个身份是女巫的毒药，请避开女巫的毒药选择";
@@ -45,11 +102,7 @@ export type QuizConfig = {
 export const STORAGE_KEY = "mei:test-quiz-config";
 
 export function defaultOptionsFromSeed(): QuizOption[] {
-  return QUIZ_RAW.map((r) => ({
-    id: `seed-${r.order}`,
-    name: r.name,
-    isMine: !r.safe,
-  }));
+  return optionsFromQuizSeed("fixed");
 }
 
 export function defaultQuizConfig(): QuizConfig {
@@ -59,6 +112,16 @@ export function defaultQuizConfig(): QuizConfig {
     tagInput: "",
     timeLimitSec: DEFAULT_LIMIT,
     options: defaultOptionsFromSeed(),
+  };
+}
+
+export function thunderRandomRoundConfig(): QuizConfig {
+  return {
+    title: DEFAULT_TITLE,
+    desc: DEFAULT_DESC,
+    tagInput: "",
+    timeLimitSec: DEFAULT_LIMIT,
+    options: optionsFromQuizSeed("randomSingle"),
   };
 }
 

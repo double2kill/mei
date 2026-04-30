@@ -171,8 +171,8 @@ export function TestSettingsPage() {
   };
 
   return (
-    <div className="flex min-h-dvh w-full flex-col bg-zinc-100 pt-[max(0.75rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))] text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
-      <div className="mx-auto w-full max-w-6xl flex-1 px-3 py-4 sm:px-8 sm:py-6">
+    <div className="flex min-h-0 w-full flex-1 flex-col bg-zinc-100 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))] text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
+      <div className="mx-auto w-full max-w-3xl flex-1 px-3 py-4 sm:px-6 sm:py-6">
         <div className="mb-4 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
           <h1 className="text-lg font-semibold sm:text-2xl">测验设置</h1>
           <Link

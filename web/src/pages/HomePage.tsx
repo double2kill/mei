@@ -2,17 +2,14 @@ import { Link } from "react-router-dom";
 
 export function HomePage() {
   return (
-    <div className="flex flex-1 flex-col items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex w-full max-w-3xl flex-1 flex-col items-center justify-between bg-white px-16 py-32 dark:bg-black sm:items-start">
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            Mei
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
+    <div className="flex min-h-0 flex-1 flex-col justify-start bg-zinc-50 dark:bg-black">
+      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-10 bg-white px-3 py-10 dark:bg-black sm:px-6 sm:py-12">
+        <div className="flex flex-col gap-4 text-left">
+          <p className="text-xl font-medium leading-8 text-zinc-800 sm:text-2xl dark:text-zinc-200">
             湄开六度
           </p>
         </div>
-        <div className="flex w-full max-w-md flex-col gap-4 sm:items-stretch">
+        <div className="flex w-full flex-col gap-4">
           <Link
             to="/test"
             className="block w-full rounded-xl border border-zinc-200 bg-white p-5 shadow-sm transition hover:border-zinc-300 hover:shadow-md active:scale-[0.99] dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700"

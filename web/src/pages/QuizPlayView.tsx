@@ -191,8 +191,8 @@ export function QuizPlayView({
   const showMineVictimForm = lost && loseKind === "mine";
 
   return (
-    <div className="flex min-h-dvh w-full flex-col bg-zinc-100 pt-[max(0.75rem,env(safe-area-inset-top))] pb-[max(0.75rem,env(safe-area-inset-bottom))] text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
-      <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col px-3 py-4 sm:px-6 sm:py-5">
+    <div className="flex min-h-0 w-full flex-1 flex-col bg-zinc-100 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
+      <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col px-3 py-4 sm:px-6 sm:py-5">
         <header className="mb-4 shrink-0 space-y-3">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
             <div className="min-w-0 flex-1">
@@ -294,9 +294,9 @@ export function QuizPlayView({
                     greenPicked
                       ? "border-emerald-700 bg-emerald-600/32 shadow-sm dark:border-emerald-400 dark:bg-emerald-500/35"
                       : greenUnpickedSafe
-                        ? "border-emerald-400/75 bg-emerald-500/12 dark:border-emerald-600/45 dark:bg-emerald-400/12"
+                        ? "border-2 border-emerald-300 bg-transparent dark:border-emerald-600/45 dark:bg-transparent"
                         : showRed
-                          ? `border-red-500/70 bg-red-500/10 dark:border-red-500/45 ${isHitMine ? "ring-2 ring-red-500/80 ring-offset-1 ring-offset-white dark:ring-offset-zinc-950" : ""}`
+                          ? `${isHitMine ? "border-2 border-red-500 bg-red-500/15 dark:border-red-400 dark:bg-red-500/20" : "border-2 border-red-200 bg-transparent dark:border-red-700/45 dark:bg-transparent"}`
                           : dimOthers
                             ? "border-zinc-200/50 opacity-35 dark:border-zinc-800"
                             : "border-zinc-300 bg-zinc-50 active:scale-[0.98] dark:border-zinc-600 dark:bg-zinc-900"
@@ -308,7 +308,9 @@ export function QuizPlayView({
                         ? "text-emerald-900 dark:text-emerald-200"
                         : greenUnpickedSafe
                           ? "text-emerald-700/90 dark:text-emerald-400"
-                          : "text-zinc-500 dark:text-zinc-400"
+                          : showRed
+                            ? "text-red-400/90 dark:text-red-400/90"
+                            : "text-zinc-500 dark:text-zinc-400"
                     }`}
                   >
                     {cellIndex + 1}
@@ -319,24 +321,13 @@ export function QuizPlayView({
                         ? "text-emerald-950 dark:text-emerald-50"
                         : greenUnpickedSafe
                           ? "text-emerald-800 dark:text-emerald-200"
-                          : ""
+                          : showRed
+                            ? "text-red-700 dark:text-red-300"
+                            : ""
                     }`}
                   >
                     {cell.name}
                   </span>
-                  {(showGreen || showRed) && (
-                    <span
-                      className={`text-base font-semibold sm:text-lg ${
-                        greenPicked
-                          ? "text-emerald-900 dark:text-emerald-100"
-                          : showGreen
-                            ? "text-emerald-600 dark:text-emerald-400"
-                            : "text-red-700 dark:text-red-300"
-                      }`}
-                    >
-                      {showGreen ? "安全" : "雷"}
-                    </span>
-                  )}
                 </button>
               );
             })}

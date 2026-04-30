@@ -1,5 +1,12 @@
 import { Link } from "react-router-dom";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import {
   countSafeMines,
   parseTags,
@@ -39,11 +46,15 @@ function optionsToCells(options: QuizOption[]): Cell[] {
 export type QuizPlayViewProps = {
   getRoundConfig: () => QuizConfig;
   settingsTo?: string;
+  toolbar?: ReactNode;
+  roundRefreshSignal?: number;
 };
 
 export function QuizPlayView({
   getRoundConfig,
   settingsTo,
+  toolbar,
+  roundRefreshSignal,
 }: QuizPlayViewProps) {
   const getRoundRef = useRef(getRoundConfig);
   getRoundRef.current = getRoundConfig;
@@ -90,6 +101,11 @@ export function QuizPlayView({
   useEffect(() => {
     applyRound();
   }, [applyRound]);
+
+  useEffect(() => {
+    if (roundRefreshSignal === undefined || roundRefreshSignal === 0) return;
+    applyRound();
+  }, [roundRefreshSignal, applyRound]);
 
   const tags = useMemo(() => parseTags(cfg.tagInput), [cfg.tagInput]);
 
@@ -154,15 +170,21 @@ export function QuizPlayView({
         setHitMineKey(cell.key);
         setLoseKind("mine");
         setLost(true);
-        setMineTaunt(pickRandomMineTaunt());
+        setMineTaunt(
+          pickRandomMineTaunt({
+            revealedSafeCount: revealedSafe.size,
+            safeTotal,
+          }),
+        );
         return;
       }
       setRevealedSafe((prev) => new Set(prev).add(cell.key));
     },
-    [won, lost, hitMineKey, revealedSafe],
+    [won, lost, hitMineKey, revealedSafe, safeTotal],
   );
 
   const ended = won || lost;
+  const poisonReveal = lost && loseKind === "mine";
   const progress = revealedSafe.size;
   const showMineTauntBlock =
     lost && loseKind === "mine" && Boolean(hitMineKey) && mineTaunt.length > 0;
@@ -227,6 +249,12 @@ export function QuizPlayView({
           )}
         </header>
 
+        {toolbar ? (
+          <div className="mb-3 flex flex-wrap items-center gap-2 rounded-lg border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-700 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300">
+            {toolbar}
+          </div>
+        ) : null}
+
         <div className="mb-3 flex items-center justify-between text-sm sm:text-base">
           <span className="tabular-nums text-zinc-600 dark:text-zinc-400">
             已点 {progress}/{Math.max(safeTotal, 0)}
@@ -245,13 +273,16 @@ export function QuizPlayView({
 
         <div className="w-full pb-2">
           <div className="grid w-full grid-cols-6 gap-2 sm:gap-2.5">
-            {cells.map((cell) => {
+            {cells.map((cell, cellIndex) => {
               const isRevealedSafe = revealedSafe.has(cell.key);
               const isHitMine = hitMineKey === cell.key;
-              const showGreen = isRevealedSafe;
-              const showRed = isHitMine;
-              const dimOthers =
-                ended && !cell.safe && !isHitMine && !isRevealedSafe;
+              const showGreen = poisonReveal ? cell.safe : isRevealedSafe;
+              const showRed = poisonReveal
+                ? !cell.safe
+                : lost && isHitMine && hitMineKey != null;
+              const dimOthers = ended && !showGreen && !showRed && !cell.safe;
+              const greenPicked = showGreen && isRevealedSafe;
+              const greenUnpickedSafe = showGreen && cell.safe && !isRevealedSafe;
 
               return (
                 <button
@@ -259,25 +290,48 @@ export function QuizPlayView({
                   type="button"
                   disabled={ended || isRevealedSafe}
                   onClick={() => onCellClick(cell)}
-                  className={`touch-manipulation flex min-h-14 min-w-0 flex-col items-center justify-center rounded-lg border px-0.5 py-2 text-center transition select-none active:opacity-90 sm:min-h-16 ${
-                    showGreen
-                      ? "border-emerald-500/70 bg-emerald-500/10 dark:border-emerald-500/45"
-                      : showRed
-                        ? "border-red-500/70 bg-red-500/10 dark:border-red-500/45"
-                        : dimOthers
-                          ? "border-zinc-200/50 opacity-35 dark:border-zinc-800"
-                          : "border-zinc-200 bg-white active:scale-[0.98] dark:border-zinc-700 dark:bg-zinc-900"
-                  } ${ended && !showGreen && !showRed && cell.safe ? "opacity-50" : ""}`}
+                  className={`touch-manipulation flex min-h-17 min-w-0 flex-col items-center justify-center gap-0.5 rounded-lg border px-0.5 py-2 text-center transition select-none active:opacity-90 sm:min-h-20 sm:gap-1 sm:py-2.5 ${
+                    greenPicked
+                      ? "border-emerald-700 bg-emerald-600/32 shadow-sm dark:border-emerald-400 dark:bg-emerald-500/35"
+                      : greenUnpickedSafe
+                        ? "border-emerald-400/75 bg-emerald-500/12 dark:border-emerald-600/45 dark:bg-emerald-400/12"
+                        : showRed
+                          ? `border-red-500/70 bg-red-500/10 dark:border-red-500/45 ${isHitMine ? "ring-2 ring-red-500/80 ring-offset-1 ring-offset-white dark:ring-offset-zinc-950" : ""}`
+                          : dimOthers
+                            ? "border-zinc-200/50 opacity-35 dark:border-zinc-800"
+                            : "border-zinc-300 bg-zinc-50 active:scale-[0.98] dark:border-zinc-600 dark:bg-zinc-900"
+                  } ${ended && !poisonReveal && !showGreen && !showRed && cell.safe ? "opacity-50" : ""}`}
                 >
-                  <span className="w-full break-words text-center text-base font-semibold leading-tight sm:text-lg">
+                  <span
+                    className={`tabular-nums text-xs font-semibold leading-none sm:text-sm ${
+                      greenPicked
+                        ? "text-emerald-900 dark:text-emerald-200"
+                        : greenUnpickedSafe
+                          ? "text-emerald-700/90 dark:text-emerald-400"
+                          : "text-zinc-500 dark:text-zinc-400"
+                    }`}
+                  >
+                    {cellIndex + 1}
+                  </span>
+                  <span
+                    className={`w-full wrap-break-word text-center text-lg font-semibold leading-snug sm:text-xl md:text-2xl ${
+                      greenPicked
+                        ? "text-emerald-950 dark:text-emerald-50"
+                        : greenUnpickedSafe
+                          ? "text-emerald-800 dark:text-emerald-200"
+                          : ""
+                    }`}
+                  >
                     {cell.name}
                   </span>
                   {(showGreen || showRed) && (
                     <span
-                      className={`mt-0.5 text-sm font-medium sm:mt-1 sm:text-base ${
-                        showGreen
-                          ? "text-emerald-700 dark:text-emerald-300"
-                          : "text-red-700 dark:text-red-300"
+                      className={`text-base font-semibold sm:text-lg ${
+                        greenPicked
+                          ? "text-emerald-900 dark:text-emerald-100"
+                          : showGreen
+                            ? "text-emerald-600 dark:text-emerald-400"
+                            : "text-red-700 dark:text-red-300"
                       }`}
                     >
                       {showGreen ? "安全" : "雷"}
@@ -300,7 +354,7 @@ export function QuizPlayView({
               <div className="flex w-full flex-col gap-3">
                 <label className="block">
                   <span className="mb-1.5 block text-sm font-medium text-zinc-600 dark:text-zinc-400">
-                    中奖者姓名
+                    中毒者姓名
                   </span>
                   <input
                     value={victimName}

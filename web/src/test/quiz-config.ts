@@ -32,35 +32,92 @@ export function shuffle<T>(arr: T[]): T[] {
   return a;
 }
 
-const MINE_TAUNT_LINES = [
-  "恭喜你成功抽中女巫的毒药，今晚KPI：躺平",
-  "很遗憾但也很荣幸，你是本轮唯一中毒玩家",
-  "恭喜爆雷！女巫精准点名你，直接带走",
-  "中奖啦！奖品是：女巫特调一杯（永久有效）",
-  "手气不错，一发入魂，毒药直达",
-  "恭喜触发隐藏结局：当场蒸发",
-  "你中奖了，不过是“反向人生大奖”",
-  "女巫看了你一眼，然后你就没了",
-  "恭喜成为毒药体验官，仅此一位",
-  "你抽中的不是数字，是命运的终点",
-  "爆冷！你成功避开所有安全选项",
-  "恭喜解锁：开局即退场成就",
-  "女巫：就你了，别问为什么",
-  "你这运气，连毒药都精准导航",
-  "恭喜成为本局最短生命周期选手",
-  "中奖提示：请立即停止呼吸（bushi）",
-  "你不是踩雷，是雷长你脚下",
-  "恭喜进入观战模式，无需操作",
-  "女巫：别人是概率，你是必然",
-  "你抽到的不是毒药，是结局快进键",
+const TAUNT_LAST_SAFE_MISS = [
+  "再摸一格就全员安全，你偏偏戳到了女巫的营业指标",
+  "全场离通关最近的人，恭喜反向通关",
+  "差一步上岸，一脚踩进童话反面",
+  "最后一格安全在隔壁，你精准导航到毒药",
+  "清台进度条已经 99%，女巫帮你点了格式化",
 ] as const;
 
-export function pickRandomMineTaunt(): string {
-  const i = Math.floor(Math.random() * MINE_TAUNT_LINES.length);
-  return MINE_TAUNT_LINES[i] ?? MINE_TAUNT_LINES[0];
+const TAUNT_FIRST_HIT = [
+  "手气不错，一发入魂，毒药直达",
+  "恭喜解锁：开局即退场成就",
+  "爆冷！你成功避开所有安全选项",
+  "恭喜触发隐藏结局：当场蒸发",
+  "女巫：就你了，别问为什么",
+  "很遗憾但也很荣幸，你是本轮唯一中毒玩家",
+  "第一下就中奖，女巫都愣了一秒",
+  "开局即巅峰，巅峰在毒药格",
+] as const;
+
+const TAUNT_EARLY = [
+  "恭喜爆雷！女巫精准点名你，直接带走",
+  "恭喜成为本局最短生命周期选手",
+  "恭喜你成功抽中女巫的毒药，今晚KPI：躺平",
+  "安全区还在热身，你先去观众席了",
+  "进度条刚起步，你选择了毒药快进键",
+  "女巫：前面白点了，这一格算加班",
+] as const;
+
+const TAUNT_LATE = [
+  "你都摸到门把手了，门框突然决定收费",
+  "女巫：别人是概率，你是必然",
+  "你这运气，连毒药都精准导航",
+  "你抽到的不是毒药，是结局快进键",
+  "恭喜成为毒药体验官，仅此一位",
+  "你抽中的不是数字，是命运的终点",
+  "女巫看了你一眼，然后你就没了",
+  "恭喜进入观战模式，无需操作",
+] as const;
+
+const TAUNT_GENERAL = [
+  "你中奖了，不过是“反向人生大奖”",
+  "中奖提示：请立即停止呼吸（bushi）",
+  "你不是踩雷，是雷长你脚下",
+  "中奖啦！奖品是：女巫特调一杯（永久有效）",
+] as const;
+
+export type MineTauntContext = {
+  revealedSafeCount: number;
+  safeTotal: number;
+};
+
+function pickFromLines(lines: readonly string[]): string {
+  if (lines.length === 0) return "";
+  const i = Math.floor(Math.random() * lines.length);
+  return lines[i] ?? lines[0];
+}
+
+export function pickRandomMineTaunt(ctx: MineTauntContext): string {
+  const r = Math.max(0, Math.floor(ctx.revealedSafeCount));
+  const s = Math.max(0, Math.floor(ctx.safeTotal));
+  if (s <= 0) return pickFromLines(TAUNT_GENERAL);
+  if (s >= 2 && r === s - 1) return pickFromLines(TAUNT_LAST_SAFE_MISS);
+  if (r === 0) return pickFromLines(TAUNT_FIRST_HIT);
+  const ratio = r / s;
+  if (ratio < 1 / 3) return pickFromLines(TAUNT_EARLY);
+  if (ratio >= 2 / 3) return pickFromLines(TAUNT_LATE);
+  return pickFromLines(TAUNT_GENERAL);
 }
 
 export type QuizSeedMineMode = "fixed" | "randomSingle";
+
+export function optionsFromRandomMineCount(mineCount: number): QuizOption[] {
+  const list = QUIZ_RAW.map((r) => ({
+    id: `seed-${r.order}`,
+    name: r.name,
+    isMine: false,
+  }));
+  if (list.length === 0) return list;
+  const maxMines = Math.max(1, list.length - 1);
+  const n = Math.min(Math.max(1, Math.floor(mineCount)), maxMines);
+  const indices = new Set<number>();
+  while (indices.size < n) {
+    indices.add(Math.floor(Math.random() * list.length));
+  }
+  return list.map((o, i) => ({ ...o, isMine: indices.has(i) }));
+}
 
 export function optionsFromQuizSeed(mineMode: QuizSeedMineMode): QuizOption[] {
   if (mineMode === "fixed") {
@@ -70,19 +127,11 @@ export function optionsFromQuizSeed(mineMode: QuizSeedMineMode): QuizOption[] {
       isMine: !r.safe,
     }));
   }
-  const list = QUIZ_RAW.map((r) => ({
-    id: `seed-${r.order}`,
-    name: r.name,
-    isMine: false,
-  }));
-  if (list.length === 0) return list;
-  const idx = Math.floor(Math.random() * list.length);
-  return list.map((o, i) => ({ ...o, isMine: i === idx }));
+  return optionsFromRandomMineCount(1);
 }
 
-export const DEFAULT_TITLE = "女巫的毒药 1（湄师傅 杭城小师赛）";
-export const DEFAULT_DESC =
-  "以下有一个身份是女巫的毒药，请避开女巫的毒药选择";
+export const DEFAULT_TITLE = "女巫的毒药 1.1（湄师傅 杭城小师赛）";
+export const DEFAULT_DESC = "以下有一个身份是女巫的毒药，请避开女巫的毒药选择";
 export const DEFAULT_LIMIT = 1200;
 
 export type QuizOption = {
@@ -101,6 +150,38 @@ export type QuizConfig = {
 
 export const STORAGE_KEY = "mei:test-quiz-config";
 
+export const RANDOM_POISON_COUNT_KEY = "mei:random-poison-count";
+export const DEFAULT_RANDOM_POISON_COUNT = 1;
+
+export function maxRandomPoisonCount(): number {
+  return Math.max(1, QUIZ_RAW.length - 1);
+}
+
+export function clampRandomPoisonCount(n: number): number {
+  const max = maxRandomPoisonCount();
+  const v = Math.floor(Number(n));
+  if (!Number.isFinite(v)) return DEFAULT_RANDOM_POISON_COUNT;
+  return Math.min(max, Math.max(1, v));
+}
+
+export function loadRandomPoisonCount(): number {
+  if (typeof window === "undefined") return DEFAULT_RANDOM_POISON_COUNT;
+  try {
+    const raw = window.localStorage.getItem(RANDOM_POISON_COUNT_KEY);
+    if (raw == null || raw === "") return DEFAULT_RANDOM_POISON_COUNT;
+    return clampRandomPoisonCount(JSON.parse(raw) as number);
+  } catch {
+    return DEFAULT_RANDOM_POISON_COUNT;
+  }
+}
+
+export function saveRandomPoisonCount(n: number): void {
+  window.localStorage.setItem(
+    RANDOM_POISON_COUNT_KEY,
+    JSON.stringify(clampRandomPoisonCount(n)),
+  );
+}
+
 export function defaultOptionsFromSeed(): QuizOption[] {
   return optionsFromQuizSeed("fixed");
 }
@@ -115,13 +196,18 @@ export function defaultQuizConfig(): QuizConfig {
   };
 }
 
-export function thunderRandomRoundConfig(): QuizConfig {
+export function thunderRandomRoundConfig(mineCount: number): QuizConfig {
+  const k = clampRandomPoisonCount(mineCount);
+  const desc =
+    k === 1
+      ? DEFAULT_DESC
+      : `以下有 ${k} 个身份中了女巫的毒药，请避开女巫的毒药选择`;
   return {
     title: DEFAULT_TITLE,
-    desc: DEFAULT_DESC,
+    desc,
     tagInput: "",
     timeLimitSec: DEFAULT_LIMIT,
-    options: optionsFromQuizSeed("randomSingle"),
+    options: optionsFromRandomMineCount(k),
   };
 }
 
@@ -174,8 +260,7 @@ export function loadQuizConfig(): QuizConfig {
       title: typeof v.title === "string" ? v.title : DEFAULT_TITLE,
       desc: typeof v.desc === "string" ? v.desc : DEFAULT_DESC,
       tagInput: typeof v.tagInput === "string" ? v.tagInput : "",
-      timeLimitSec:
-        Number.isFinite(n) && n > 0 ? Math.floor(n) : DEFAULT_LIMIT,
+      timeLimitSec: Number.isFinite(n) && n > 0 ? Math.floor(n) : DEFAULT_LIMIT,
       options,
     };
   } catch {

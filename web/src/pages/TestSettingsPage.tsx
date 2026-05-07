@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   DEFAULT_DESC,
@@ -22,6 +22,8 @@ function formatSecAsMinSec(sec: number): string {
 
 export function TestSettingsPage() {
   const navigate = useNavigate();
+  const { id } = useParams();
+  const quizId = id ?? "main";
   const [cfg, setCfg] = useState<QuizConfig>(() => defaultQuizConfig());
   const [timeDraft, setTimeDraft] = useState(() =>
     String(defaultQuizConfig().timeLimitSec),
@@ -38,10 +40,10 @@ export function TestSettingsPage() {
   const optionsBlockRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const c = loadQuizConfig();
+    const c = loadQuizConfig(quizId);
     setCfg(c);
     setTimeDraft(String(c.timeLimitSec));
-  }, []);
+  }, [quizId]);
 
   useEffect(() => {
     setFieldErrors((prev) =>
@@ -166,8 +168,8 @@ export function TestSettingsPage() {
     setFieldErrors({});
     const sec = parsedTimeSec;
     if (sec == null) return;
-    saveQuizConfig({ ...cfg, timeLimitSec: sec });
-    navigate("/test");
+    saveQuizConfig({ ...cfg, timeLimitSec: sec }, quizId);
+    navigate(`/test/${quizId}`);
   };
 
   return (
@@ -176,7 +178,7 @@ export function TestSettingsPage() {
         <div className="mb-4 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
           <h1 className="text-lg font-semibold sm:text-2xl">测验设置</h1>
           <Link
-            to="/test"
+            to={`/test/${quizId}`}
             className="touch-manipulation self-start rounded-lg px-3 py-2.5 text-base text-zinc-600 active:bg-zinc-200 sm:self-auto sm:py-2 dark:text-zinc-400 dark:active:bg-zinc-800"
           >
             返回测验
@@ -219,7 +221,7 @@ export function TestSettingsPage() {
                   rows={3}
                   placeholder={DEFAULT_DESC}
                   aria-invalid={Boolean(fieldErrors.desc)}
-                  className={`min-h-[5.5rem] w-full resize-y rounded-lg border bg-zinc-50 px-3 py-2 text-base dark:bg-zinc-950 sm:resize-none sm:min-h-0 ${
+                  className={`min-h-22 w-full resize-y rounded-lg border bg-zinc-50 px-3 py-2 text-base dark:bg-zinc-950 sm:resize-none sm:min-h-0 ${
                     fieldErrors.desc
                       ? "border-red-500 dark:border-red-500"
                       : "border-zinc-200 dark:border-zinc-700"
@@ -371,12 +373,12 @@ export function TestSettingsPage() {
             </div>
 
             <div className="hidden overflow-x-auto rounded-lg border border-zinc-200 dark:border-zinc-800 md:block">
-              <table className="w-full min-w-[40rem] text-left text-sm">
+              <table className="w-full min-w-160 text-left text-sm">
                 <thead className="border-b border-zinc-200 bg-zinc-50 text-zinc-600 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-400">
                   <tr>
                     <th className="w-12 px-2 py-2.5 font-medium">序号</th>
                     <th className="w-28 px-3 py-2.5 font-medium">调整</th>
-                    <th className="min-w-[8rem] px-3 py-2.5 font-medium">
+                    <th className="min-w-32 px-3 py-2.5 font-medium">
                       名称
                     </th>
                     <th className="w-24 px-3 py-2.5 font-medium">雷</th>

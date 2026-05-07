@@ -64,7 +64,11 @@ export function QuizPlayView({
   const [revealedSafe, setRevealedSafe] = useState<Set<string>>(
     () => new Set(),
   );
-  const [hitMineKey, setHitMineKey] = useState<string | null>(null);
+  const [revealedMineKeys, setRevealedMineKeys] = useState<Set<string>>(
+    () => new Set(),
+  );
+  const [mode, setMode] = useState<"quick" | "clear">("quick");
+  const modeInitRef = useRef(false);
   const [won, setWon] = useState(false);
   const [lost, setLost] = useState(false);
   const [loseKind, setLoseKind] = useState<null | "mine" | "time">(null);
@@ -77,17 +81,19 @@ export function QuizPlayView({
   const [saveToast, setSaveToast] = useState<string | null>(null);
   const [remaining, setRemaining] = useState(cfg.timeLimitSec);
 
-  const { safe: safeTotal } = useMemo(
+  const { safe: safeTotal, mines: minesTotal } = useMemo(
     () => countSafeMines(cfg.options),
     [cfg.options],
   );
+  const allowClearMode = minesTotal >= 2;
+  const useAllMinesRule = mode === "clear" && allowClearMode;
 
   const applyRound = useCallback(() => {
     const c = getRoundRef.current();
     setCfg(c);
     setCells(optionsToCells(c.options));
     setRevealedSafe(new Set());
-    setHitMineKey(null);
+    setRevealedMineKeys(new Set());
     setWon(false);
     setLost(false);
     setLoseKind(null);
@@ -108,6 +114,18 @@ export function QuizPlayView({
   }, [roundRefreshSignal, applyRound]);
 
   const tags = useMemo(() => parseTags(cfg.tagInput), [cfg.tagInput]);
+
+  useEffect(() => {
+    if (!allowClearMode && mode === "clear") setMode("quick");
+  }, [allowClearMode, mode]);
+
+  useEffect(() => {
+    if (!modeInitRef.current) {
+      modeInitRef.current = true;
+      return;
+    }
+    applyRound();
+  }, [mode, applyRound]);
 
   const resetRound = useCallback(() => {
     applyRound();
@@ -143,8 +161,9 @@ export function QuizPlayView({
   useEffect(() => {
     if (won || lost) return;
     if (remaining <= 0) {
-      const mine = cells.find((c) => !c.safe);
-      if (mine) setHitMineKey(mine.key);
+      setRevealedMineKeys(
+        new Set(cells.filter((c) => !c.safe).map((c) => c.key)),
+      );
       setLoseKind("time");
       setLost(true);
       return;
@@ -164,30 +183,48 @@ export function QuizPlayView({
 
   const onCellClick = useCallback(
     (cell: Cell) => {
-      if (won || lost || hitMineKey) return;
+      if (won || lost) return;
       if (revealedSafe.has(cell.key)) return;
+      if (revealedMineKeys.has(cell.key)) return;
       if (!cell.safe) {
-        setHitMineKey(cell.key);
-        setLoseKind("mine");
-        setLost(true);
-        setMineTaunt(
-          pickRandomMineTaunt({
-            revealedSafeCount: revealedSafe.size,
-            safeTotal,
-          }),
-        );
+        setRevealedMineKeys((prev) => {
+          const next = new Set(prev).add(cell.key);
+          const endFromMines =
+            useAllMinesRule && minesTotal >= 2 ? next.size >= minesTotal : true;
+          if (endFromMines) {
+            setLost(true);
+            setLoseKind("mine");
+            setMineTaunt(
+              pickRandomMineTaunt({
+                revealedSafeCount: revealedSafe.size,
+                safeTotal,
+              }),
+            );
+          }
+          return next;
+        });
         return;
       }
       setRevealedSafe((prev) => new Set(prev).add(cell.key));
     },
-    [won, lost, hitMineKey, revealedSafe, safeTotal],
+    [
+      won,
+      lost,
+      revealedSafe,
+      revealedMineKeys,
+      useAllMinesRule,
+      minesTotal,
+      safeTotal,
+    ],
   );
 
   const ended = won || lost;
   const poisonReveal = lost && loseKind === "mine";
   const progress = revealedSafe.size;
+  const mineProgress = revealedMineKeys.size;
+  const minesRemaining = Math.max(0, minesTotal - mineProgress);
   const showMineTauntBlock =
-    lost && loseKind === "mine" && Boolean(hitMineKey) && mineTaunt.length > 0;
+    lost && loseKind === "mine" && mineTaunt.length > 0;
   const showMineVictimForm = lost && loseKind === "mine";
 
   return (
@@ -250,14 +287,64 @@ export function QuizPlayView({
         </header>
 
         {toolbar ? (
-          <div className="mb-3 flex flex-wrap items-center gap-2 rounded-lg border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-700 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300">
-            {toolbar}
+          <div className="mb-3 flex flex-col gap-3 rounded-xl border border-zinc-200 bg-white px-3 py-3 text-sm text-zinc-700 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300">
+            <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+              <div
+                role="tablist"
+                aria-label="模式"
+                className="inline-flex w-full overflow-hidden rounded-xl border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-950 sm:w-auto"
+              >
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={mode === "quick"}
+                  onClick={() => setMode("quick")}
+                  className={`touch-manipulation flex-1 px-5 py-3 text-base font-semibold transition sm:flex-none ${
+                    mode === "quick"
+                      ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
+                      : "text-zinc-700 hover:bg-zinc-50 active:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-800 dark:active:bg-zinc-800"
+                  }`}
+                >
+                  一触即亡
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={mode === "clear"}
+                  disabled={!allowClearMode}
+                  onClick={() => setMode("clear")}
+                  className={`touch-manipulation flex-1 px-5 py-3 text-base font-semibold transition disabled:opacity-45 sm:flex-none ${
+                    mode === "clear"
+                      ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
+                      : "text-zinc-700 hover:bg-zinc-50 active:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-800 dark:active:bg-zinc-800"
+                  }`}
+                >
+                  百毒不侵
+                </button>
+              </div>
+              <span className="text-sm text-zinc-500 dark:text-zinc-500">
+                {mode === "clear"
+                  ? "需点齐全部毒药才结束"
+                  : "踩中任意毒药立刻结束"}
+                {!allowClearMode ? "（当前仅 1 个毒药）" : ""}
+              </span>
+            </div>
+            <div className="h-px w-full bg-zinc-200/70 dark:bg-zinc-700/70" />
+            <div className="flex flex-wrap items-center gap-2">{toolbar}</div>
           </div>
         ) : null}
 
         <div className="mb-3 flex items-center justify-between text-sm sm:text-base">
-          <span className="tabular-nums text-zinc-600 dark:text-zinc-400">
-            已点 {progress}/{Math.max(safeTotal, 0)}
+          <span className="flex flex-wrap items-center gap-x-3 gap-y-1 tabular-nums text-zinc-600 dark:text-zinc-400">
+            <span>
+              安全 {progress}/{Math.max(safeTotal, 0)}
+            </span>
+            {minesTotal >= 2 ? (
+              <span>
+                毒药 {mineProgress}/{Math.max(minesTotal, 0)}（剩 {minesRemaining}
+                ）
+              </span>
+            ) : null}
           </span>
           {won && (
             <span className="font-medium text-emerald-600 dark:text-emerald-400">
@@ -275,20 +362,19 @@ export function QuizPlayView({
           <div className="grid w-full grid-cols-6 gap-2 sm:gap-2.5">
             {cells.map((cell, cellIndex) => {
               const isRevealedSafe = revealedSafe.has(cell.key);
-              const isHitMine = hitMineKey === cell.key;
+              const mineRevealed = !cell.safe && revealedMineKeys.has(cell.key);
               const showGreen = poisonReveal ? cell.safe : isRevealedSafe;
-              const showRed = poisonReveal
-                ? !cell.safe
-                : lost && isHitMine && hitMineKey != null;
+              const showRed = poisonReveal ? !cell.safe : mineRevealed;
               const dimOthers = ended && !showGreen && !showRed && !cell.safe;
               const greenPicked = showGreen && isRevealedSafe;
-              const greenUnpickedSafe = showGreen && cell.safe && !isRevealedSafe;
+              const greenUnpickedSafe =
+                showGreen && cell.safe && !isRevealedSafe;
 
               return (
                 <button
                   key={cell.key}
                   type="button"
-                  disabled={ended || isRevealedSafe}
+                  disabled={ended || isRevealedSafe || mineRevealed}
                   onClick={() => onCellClick(cell)}
                   className={`touch-manipulation flex min-h-17 min-w-0 flex-col items-center justify-center gap-0.5 rounded-lg border px-0.5 py-2 text-center transition select-none active:opacity-90 sm:min-h-20 sm:gap-1 sm:py-2.5 ${
                     greenPicked
@@ -296,7 +382,7 @@ export function QuizPlayView({
                       : greenUnpickedSafe
                         ? "border-2 border-emerald-300 bg-transparent dark:border-emerald-600/45 dark:bg-transparent"
                         : showRed
-                          ? `${isHitMine ? "border-2 border-red-500 bg-red-500/15 dark:border-red-400 dark:bg-red-500/20" : "border-2 border-red-200 bg-transparent dark:border-red-700/45 dark:bg-transparent"}`
+                          ? `${mineRevealed ? "border-2 border-red-500 bg-red-500/15 dark:border-red-400 dark:bg-red-500/20" : "border-2 border-red-200 bg-transparent dark:border-red-700/45 dark:bg-transparent"}`
                           : dimOthers
                             ? "border-zinc-200/50 opacity-35 dark:border-zinc-800"
                             : "border-zinc-300 bg-zinc-50 active:scale-[0.98] dark:border-zinc-600 dark:bg-zinc-900"
@@ -378,7 +464,7 @@ export function QuizPlayView({
       {saveToast ? (
         <div
           role="status"
-          className="fixed bottom-[max(1rem,env(safe-area-inset-bottom))] left-1/2 z-[60] max-w-sm -translate-x-1/2 rounded-xl bg-zinc-900 px-5 py-3 text-center text-sm font-medium text-white shadow-lg dark:bg-zinc-100 dark:text-zinc-900"
+          className="fixed bottom-[max(1rem,env(safe-area-inset-bottom))] left-1/2 z-60 max-w-sm -translate-x-1/2 rounded-xl bg-zinc-900 px-5 py-3 text-center text-sm font-medium text-white shadow-lg dark:bg-zinc-100 dark:text-zinc-900"
         >
           {saveToast}
         </div>

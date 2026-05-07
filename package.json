@@ -14,8 +14,8 @@
     "start:web": "pnpm --filter web start",
     "start:api": "pnpm --filter api start",
     "lint": "pnpm --filter web exec tsc --noEmit",
-    "deploy": "pnpm --filter web deploy && pnpm --filter api deploy",
-    "deploy:web": "pnpm --filter web deploy",
-    "deploy:api": "pnpm --filter api deploy"
+    "deploy": "pnpm --filter web run deploy && pnpm --filter api run deploy",
+    "deploy:web": "pnpm --filter web run deploy",
+    "deploy:api": "pnpm --filter api run deploy"
   }
 }

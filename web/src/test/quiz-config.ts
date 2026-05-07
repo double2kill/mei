@@ -150,6 +150,12 @@ export type QuizConfig = {
 
 export const STORAGE_KEY = "mei:test-quiz-config";
 
+export function quizStorageKey(id?: string): string {
+  const k = (id ?? "").trim();
+  if (!k || k === "main") return STORAGE_KEY;
+  return `${STORAGE_KEY}:${k}`;
+}
+
 export const RANDOM_POISON_COUNT_KEY = "mei:random-poison-count";
 export const DEFAULT_RANDOM_POISON_COUNT = 1;
 
@@ -186,9 +192,10 @@ export function defaultOptionsFromSeed(): QuizOption[] {
   return optionsFromQuizSeed("fixed");
 }
 
-export function defaultQuizConfig(): QuizConfig {
+export function defaultQuizConfig(overrideTitle?: string): QuizConfig {
+  const t = overrideTitle?.trim();
   return {
-    title: DEFAULT_TITLE,
+    title: t && t.length > 0 ? t : DEFAULT_TITLE,
     desc: DEFAULT_DESC,
     tagInput: "",
     timeLimitSec: DEFAULT_LIMIT,
@@ -196,14 +203,18 @@ export function defaultQuizConfig(): QuizConfig {
   };
 }
 
-export function thunderRandomRoundConfig(mineCount: number): QuizConfig {
+export function thunderRandomRoundConfig(
+  mineCount: number,
+  overrideTitle?: string,
+): QuizConfig {
   const k = clampRandomPoisonCount(mineCount);
   const desc =
     k === 1
       ? DEFAULT_DESC
       : `以下有 ${k} 个身份中了女巫的毒药，请避开女巫的毒药选择`;
+  const t = overrideTitle?.trim();
   return {
-    title: DEFAULT_TITLE,
+    title: t && t.length > 0 ? t : DEFAULT_TITLE,
     desc,
     tagInput: "",
     timeLimitSec: DEFAULT_LIMIT,
@@ -248,10 +259,10 @@ function parseStoredOptions(raw: unknown): QuizOption[] | null {
   return out.length > 0 ? out : null;
 }
 
-export function loadQuizConfig(): QuizConfig {
+export function loadQuizConfig(id?: string): QuizConfig {
   if (typeof window === "undefined") return defaultQuizConfig();
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
+    const raw = window.localStorage.getItem(quizStorageKey(id));
     if (!raw) return defaultQuizConfig();
     const v = JSON.parse(raw) as Partial<QuizConfig>;
     const n = Number(v.timeLimitSec);
@@ -268,6 +279,6 @@ export function loadQuizConfig(): QuizConfig {
   }
 }
 
-export function saveQuizConfig(c: QuizConfig): void {
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(c));
+export function saveQuizConfig(c: QuizConfig, id?: string): void {
+  window.localStorage.setItem(quizStorageKey(id), JSON.stringify(c));
 }

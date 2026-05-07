@@ -1,8 +1,5 @@
-import { loadQuizConfig } from "../test/quiz-config";
-import { QuizPlayView } from "./QuizPlayView";
+import { Navigate } from "react-router-dom";
 
 export function TestPage() {
-  return (
-    <QuizPlayView getRoundConfig={loadQuizConfig} settingsTo="/test/settings" />
-  );
+  return <Navigate to="/test/main" replace />;
 }

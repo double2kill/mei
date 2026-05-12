@@ -6,6 +6,7 @@ import { RandomThunderPage } from "./pages/RandomThunderPage";
 import { TestSettingsPage } from "./pages/TestSettingsPage";
 import { EvaPage } from "./pages/EvaPage";
 import { TestPlayPage } from "./pages/TestPlayPage";
+import { SegmentSettingsPage } from "./pages/SegmentSettingsPage";
 
 export default function App() {
   return (
@@ -14,6 +15,10 @@ export default function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/eva" element={<EvaPage />} />
         <Route path="/test" element={<TestPage />} />
+        <Route
+          path="/test/segment/settings"
+          element={<SegmentSettingsPage />}
+        />
         <Route path="/test/:id" element={<TestPlayPage />} />
         <Route path="/test/:id/settings" element={<TestSettingsPage />} />
         <Route path="/random" element={<RandomThunderPage />} />

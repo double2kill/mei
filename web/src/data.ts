@@ -7,7 +7,7 @@ export const defaultCardCover =
 export const evaCardCover =
   (base.endsWith("/") ? base : `${base}/`) + "eva-witch.png";
 
-export type QuizType = "fixed" | "random";
+export type QuizType = "fixed" | "random" | "segment";
 
 export type QuizDef = {
   id: string;
@@ -39,6 +39,12 @@ export const quizDefs: Record<string, QuizDef> = {
     title: "Eva(云上小师赛)",
     type: "random",
   },
+  segment: {
+    id: "segment",
+    title: "排段",
+    type: "segment",
+    settings: true,
+  },
 };
 
 export const homeEntries: EntryDef[] = [
@@ -46,6 +52,11 @@ export const homeEntries: EntryDef[] = [
   {
     to: "/test/random",
     title: quizDefs.random.title,
+    coverSrc: defaultCardCover,
+  },
+  {
+    to: "/test/segment",
+    title: quizDefs.segment.title,
     coverSrc: defaultCardCover,
   },
 ];

@@ -10,6 +10,7 @@ import {
 } from "../test/quiz-config";
 import { getQuizDef } from "../data";
 import { QuizPlayView } from "./QuizPlayView";
+import { SegmentPlayView } from "./SegmentPlayView";
 
 function resolvedTitle(raw: string | null, fallback: string) {
   if (!raw?.trim()) return fallback;
@@ -77,6 +78,10 @@ export function TestPlayPage() {
   }
 
   const settingsTo = def.settings ? `/test/${def.id}/settings` : undefined;
+
+  if (def.type === "segment") {
+    return <SegmentPlayView settingsTo={settingsTo} />;
+  }
 
   return (
     <QuizPlayView

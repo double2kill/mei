@@ -24,6 +24,7 @@ function shuffledAnswerChars(answer: string): string {
 
 type SegmentPlayViewProps = {
   settingsTo?: string;
+  segmentQuizId?: string;
 };
 
 type CheckRecord = {
@@ -49,11 +50,14 @@ function newCheckId(): string {
   return `chk-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
-export function SegmentPlayView({ settingsTo }: SegmentPlayViewProps) {
+export function SegmentPlayView({
+  settingsTo,
+  segmentQuizId = "segment",
+}: SegmentPlayViewProps) {
   const location = useLocation();
   const routeKeyRef = useRef(location.key);
   const [cfg, setCfg] = useState<SegmentPlayConfig>(() =>
-    loadSegmentPlayConfig(),
+    loadSegmentPlayConfig(segmentQuizId),
   );
   const [shuffleNonce, setShuffleNonce] = useState(0);
   const answerShuffle = useMemo(
@@ -95,7 +99,7 @@ export function SegmentPlayView({ settingsTo }: SegmentPlayViewProps) {
   }, [draft]);
 
   useEffect(() => {
-    const c = loadSegmentPlayConfig();
+    const c = loadSegmentPlayConfig(segmentQuizId);
     setCfg(c);
     setDraft("");
     setCheckHistory([]);
@@ -109,7 +113,7 @@ export function SegmentPlayView({ settingsTo }: SegmentPlayViewProps) {
       routeKeyRef.current = location.key;
       setShuffleNonce((n) => n + 1);
     }
-  }, [location.key]);
+  }, [location.key, segmentQuizId]);
 
   const shortageCards = useMemo(
     () => hanziShortageVsAnswer(cfg.answerText, draft, answerShuffle),
@@ -191,7 +195,7 @@ export function SegmentPlayView({ settingsTo }: SegmentPlayViewProps) {
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
             <div className="min-w-0 flex-1">
               <h1 className="text-lg font-semibold leading-snug tracking-tight sm:text-xl md:text-2xl">
-                {cfg.title.trim() || "排段"}
+                {cfg.title.trim() || "每日排段"}
               </h1>
             </div>
             {settingsTo ? (

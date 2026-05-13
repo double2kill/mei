@@ -1,9 +1,17 @@
+import { segmentDefaultPlayForQuizId } from "../data-helpers";
+
 export type SegmentPlayConfig = {
   title: string;
   answerText: string;
 };
 
-export const SEGMENT_STORAGE_KEY = "mei:segment-play-config";
+export function segmentStorageKey(quizId: string): string {
+  return quizId === "segment"
+    ? "mei:segment-play-config"
+    : `mei:segment-play-config:${quizId}`;
+}
+
+export const SEGMENT_STORAGE_KEY = segmentStorageKey("segment");
 
 const HANZI_RE = /\p{Script=Han}/gu;
 
@@ -117,16 +125,17 @@ export function hanziSurplusVsAnswer(
   return out;
 }
 
-export function defaultSegmentPlayConfig(): SegmentPlayConfig {
-  return {
-    title: "排段",
-    answerText:
-      "狼人杀是一款基于心理学和逻辑推理的经典社交桌游，分为狼人、好人两大阵营。",
-  };
+export function defaultSegmentPlayConfig(
+  quizId = "segment",
+): SegmentPlayConfig {
+  return { ...segmentDefaultPlayForQuizId(quizId) };
 }
 
-function parseStoredSegment(v: Partial<SegmentPlayConfig>): SegmentPlayConfig {
-  const d = defaultSegmentPlayConfig();
+function parseStoredSegment(
+  v: Partial<SegmentPlayConfig>,
+  quizId: string,
+): SegmentPlayConfig {
+  const d = defaultSegmentPlayConfig(quizId);
   return {
     title:
       typeof v.title === "string" && v.title.trim() ? v.title.trim() : d.title,
@@ -134,18 +143,21 @@ function parseStoredSegment(v: Partial<SegmentPlayConfig>): SegmentPlayConfig {
   };
 }
 
-export function loadSegmentPlayConfig(): SegmentPlayConfig {
-  if (typeof window === "undefined") return defaultSegmentPlayConfig();
+export function loadSegmentPlayConfig(quizId = "segment"): SegmentPlayConfig {
+  if (typeof window === "undefined") return defaultSegmentPlayConfig(quizId);
   try {
-    const raw = window.localStorage.getItem(SEGMENT_STORAGE_KEY);
-    if (!raw) return defaultSegmentPlayConfig();
+    const raw = window.localStorage.getItem(segmentStorageKey(quizId));
+    if (!raw) return defaultSegmentPlayConfig(quizId);
     const v = JSON.parse(raw) as Partial<SegmentPlayConfig>;
-    return parseStoredSegment(v);
+    return parseStoredSegment(v, quizId);
   } catch {
-    return defaultSegmentPlayConfig();
+    return defaultSegmentPlayConfig(quizId);
   }
 }
 
-export function saveSegmentPlayConfig(c: SegmentPlayConfig): void {
-  window.localStorage.setItem(SEGMENT_STORAGE_KEY, JSON.stringify(c));
+export function saveSegmentPlayConfig(
+  c: SegmentPlayConfig,
+  quizId = "segment",
+): void {
+  window.localStorage.setItem(segmentStorageKey(quizId), JSON.stringify(c));
 }

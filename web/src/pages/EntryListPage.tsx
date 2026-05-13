@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import type { EntryDef } from "../data";
+import type { EntryDef } from "../type";
 
 const cardClass =
   "flex h-full w-full flex-col overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm transition hover:border-zinc-300 hover:shadow-md active:scale-[0.99] dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700";

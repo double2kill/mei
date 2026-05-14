@@ -48,6 +48,15 @@ export const appContent: AppContent = {
       settings: false,
       answerText: "蒋泽宇，字湄，号大帅逼，福建漳州人士。",
     },
+    {
+      id: "segment0514",
+      path: "/test/segment0514",
+      title: "今日排段(5-14)",
+      type: "segment",
+      settings: false,
+      answerText:
+        "蒋泽宇，字湄，号帅逼居士，福建漳州人士。坚信没苦硬吃的人生信条：放着年薪百万的工作不干，非得贷款上班搞直播。现为京城大师赛流水数一数二的头部主播。",
+    },
   ],
   homeScreen: {
     rows: [
@@ -55,6 +64,7 @@ export const appContent: AppContent = {
       { quizId: "random", coverRef: "witch" },
       { quizId: "segment", coverRef: "witch" },
       { quizId: "segment0513", coverRef: "witch" },
+      { quizId: "segment0506", coverRef: "witch" },
     ],
   },
   evaScreen: {

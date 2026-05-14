@@ -64,7 +64,7 @@ export const appContent: AppContent = {
       { quizId: "random", coverRef: "witch" },
       { quizId: "segment", coverRef: "witch" },
       { quizId: "segment0513", coverRef: "witch" },
-      { quizId: "segment0506", coverRef: "witch" },
+      { quizId: "segment0514", coverRef: "witch" },
     ],
   },
   evaScreen: {

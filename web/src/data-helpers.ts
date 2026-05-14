@@ -31,7 +31,7 @@ function screenRowToEntry(row: { quizId: string; coverRef: string }): EntryDef {
     throw new Error(`appContent: unknown quizId "${row.quizId}"`);
   }
   const coverSrc = coverByRef[row.coverRef] ?? defaultCardCover;
-  return { to: q.path, title: q.title, coverSrc };
+  return { to: q.path, title: q.title, coverSrc, type: q.type };
 }
 
 export const homeEntries: EntryDef[] =

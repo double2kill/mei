@@ -1,4 +1,4 @@
-export type QuizType = "fixed" | "random" | "segment";
+export type QuizType = "fixed" | "random" | "segment" | "sentence";
 
 export type QuizRow = {
   id: string;
@@ -7,6 +7,8 @@ export type QuizRow = {
   type: QuizType;
   settings?: boolean;
   answerText?: string;
+  text?: string;
+  usageRequired?: number;
 };
 
 export type QuizDef = QuizRow;
@@ -15,6 +17,7 @@ export type EntryDef = {
   to: string;
   title: string;
   coverSrc: string;
+  type: QuizType;
 };
 
 export type SegmentDailyPlay = {

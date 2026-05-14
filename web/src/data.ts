@@ -57,6 +57,14 @@ export const appContent: AppContent = {
       answerText:
         "蒋泽宇，字湄，号帅逼居士，福建漳州人士。坚信没苦硬吃的人生信条：放着年薪百万的工作不干，非得贷款上班搞直播。现为京城大师赛流水数一数二的头部主播。",
     },
+    {
+      id: "sentence",
+      path: "/test/sentence",
+      title: "造句",
+      type: "sentence",
+      text: "蒋泽宇在京城大师赛上展现了惊人的狼人杀实力，他与刘小怂、JY等顶级玩家的精彩对决让观众大呼过瘾。",
+      usageRequired: 60,
+    },
   ],
   homeScreen: {
     rows: [
@@ -65,6 +73,7 @@ export const appContent: AppContent = {
       { quizId: "segment", coverRef: "witch" },
       { quizId: "segment0513", coverRef: "witch" },
       { quizId: "segment0514", coverRef: "witch" },
+      { quizId: "sentence", coverRef: "witch" },
     ],
   },
   evaScreen: {

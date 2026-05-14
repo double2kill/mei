@@ -11,6 +11,7 @@ import {
 import { getQuizDef } from "../data-helpers";
 import { QuizPlayView } from "./QuizPlayView";
 import { SegmentPlayView } from "./SegmentPlayView";
+import { SentencePlayPage } from "./SentencePlayPage";
 
 function resolvedTitle(raw: string | null, fallback: string) {
   if (!raw?.trim()) return fallback;
@@ -81,6 +82,10 @@ export function TestPlayPage() {
 
   if (def.type === "segment") {
     return <SegmentPlayView settingsTo={settingsTo} segmentQuizId={def.id} />;
+  }
+
+  if (def.type === "sentence") {
+    return <SentencePlayPage />;
   }
 
   return (

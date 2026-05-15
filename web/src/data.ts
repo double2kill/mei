@@ -57,6 +57,15 @@ export const appContent: AppContent = {
       answerText:
         "蒋泽宇，字湄，号帅逼居士，福建漳州人士。坚信没苦硬吃的人生信条：放着年薪百万的工作不干，非得贷款上班搞直播。现为京城大师赛流水数一数二的头部主播。",
     },
+    {
+      id: "segment0515",
+      path: "/test/segment0515",
+      title: "今日排段(5-15)",
+      type: "segment",
+      settings: false,
+      answerText:
+        "在那山的那边海的那边有一群湄少男战士，他们守护着爱与和平，他们穿着的水手服。他们能够从宇宙中吸取星光之力，他们居住在那三千钻的星光庄园。",
+    },
   ],
   homeScreen: {
     rows: [
@@ -65,6 +74,7 @@ export const appContent: AppContent = {
       { quizId: "segment", coverRef: "witch" },
       { quizId: "segment0513", coverRef: "witch" },
       { quizId: "segment0514", coverRef: "witch" },
+      { quizId: "segment0515", coverRef: "witch" },
     ],
   },
   evaScreen: {

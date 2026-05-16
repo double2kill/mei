@@ -38,7 +38,7 @@ export const appContent: AppContent = {
       type: "segment",
       settings: true,
       answerText:
-        "狼人杀是一款基于心理学和逻辑推理的经典社交桌游，分为狼人、好人两大阵营 。",
+        "狼人杀是一款基于心理学和逻辑推理的经典社交桌游，分为狼人、好人两大阵营",
     },
     {
       id: "segment0513",

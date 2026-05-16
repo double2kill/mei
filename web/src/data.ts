@@ -38,7 +38,7 @@ export const appContent: AppContent = {
       type: "segment",
       settings: true,
       answerText:
-        "狼人杀是一款基于心理学和逻辑推理的经典社交桌游，分为狼人、好人两大阵营。",
+        "狼人杀是一款基于心理学和逻辑推理的经典社交桌游，分为狼人、好人两大阵营 。",
     },
     {
       id: "segment0513",
@@ -55,15 +55,24 @@ export const appContent: AppContent = {
       type: "segment",
       settings: false,
       answerText:
-        "蒋泽宇，字湄，号帅逼居士，福建漳州人士。坚信没苦硬吃的人生信条：放着年薪百万的工作不干，非得贷款上班搞直播。现为京城大师赛流水数一数二的头部主播。",
+        "蒋泽宇，字湄，号帅逼居士，福建漳州人士。坚信没苦硬吃的人生信条：放着年 薪百万的工作不干，非得贷款上班搞直播。现为京城大师赛流水数一数二的头部主播。",
     },
     {
       id: "sentence",
       path: "/test/sentence",
       title: "造句",
       type: "sentence",
-      text: "蒋泽宇在京城大师赛上展现了惊人的狼人杀实力，他与刘小怂、JY等顶级玩家的精彩对决让观众大呼过瘾。",
+      text: "蒋泽宇在京城大师赛上展现了惊人的狼人杀实力，他与刘小怂、JY等顶级玩 家的精彩对决让观众大呼过瘾。",
       usageRequired: 60,
+    },
+    {
+      id: "segment0515",
+      path: "/test/segment0515",
+      title: "今日排段(5-15)",
+      type: "segment",
+      settings: false,
+      answerText:
+        "在那山的那边海的那边有一群湄少男战士，他们守护着爱与和平，他们穿着的水 手服。他们能够从宇宙中吸取星光之力，他们居住在那三千钻的星光庄园。",
     },
   ],
   homeScreen: {
@@ -74,6 +83,7 @@ export const appContent: AppContent = {
       { quizId: "segment0513", coverRef: "witch" },
       { quizId: "segment0514", coverRef: "witch" },
       { quizId: "sentence", coverRef: "witch" },
+      { quizId: "segment0515", coverRef: "witch" },
     ],
   },
   evaScreen: {

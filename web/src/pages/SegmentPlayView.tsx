@@ -127,6 +127,11 @@ export function SegmentPlayView({
 
   const hanziBalanced = shortageCards.length === 0 && surplusCards.length === 0;
 
+  const answerRevealed = useMemo(
+    () => checkHistory.some((r) => r.percent >= 50),
+    [checkHistory],
+  );
+
   const commitVerify = useCallback((draftSnap: string, answerText: string) => {
     const r = hanziOrderIndexMatchRate(answerText, draftSnap);
     const rec: CheckRecord = {
@@ -214,11 +219,21 @@ export function SegmentPlayView({
             1. 参考答案（随机打乱）
           </h2>
           <p className="text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
-            提示：上方为全文字符随机打乱。「校验汉字」按汉字顺序与参考答案原文逐位比对得到匹配度；每次校验会在下方追加一条记录（原文为当时输入、列为匹配度）。标点不参与。字卡仍提示汉字个数是否与原文一致。
+            文本已打乱，标点不参与计算；匹配度达 50% 会显示正确答案。
           </p>
           <p className="whitespace-pre-wrap break-all text-base leading-relaxed font-medium text-zinc-900 dark:text-zinc-100">
             {answerShuffle}
           </p>
+          {answerRevealed ? (
+            <div className="mt-4 space-y-2 border-t border-zinc-200 pt-4 dark:border-zinc-700">
+              <h3 className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
+                参考答案原文（匹配度已达 50% 及以上）
+              </h3>
+              <p className="whitespace-pre-wrap break-all text-base leading-relaxed font-medium text-emerald-800 dark:text-emerald-200">
+                {cfg.answerText}
+              </p>
+            </div>
+          ) : null}
         </section>
 
         <section className="mb-4 space-y-3 rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-900 sm:p-5">

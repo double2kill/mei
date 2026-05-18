@@ -72,7 +72,7 @@ export const appContent: AppContent = {
       type: "segment",
       settings: false,
       answerText:
-        "在那山的那边海的那边有一群湄少男战士，他们守护着爱与和平，他们穿着的水 手服。他们能够从宇宙中吸取星光之力，他们居住在那三千钻的星光庄园。",
+        "在那山的那边海的那边有个湄少男战士，他爱穿比基尼，他在抖音行乞。他号召众人齐集暮光星辰之力，他住在三千钻的星光庄园里。",
     },
   ],
   homeScreen: {

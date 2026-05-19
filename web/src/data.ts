@@ -66,6 +66,14 @@ export const appContent: AppContent = {
       usageRequired: 60,
     },
     {
+      id: "sentence0519",
+      path: "/test/sentence0519",
+      title: "造句(5-19)",
+      type: "sentence",
+      text: "湄在与宝玉妹妹争夺深圳决赛席位的世纪PK中，榜100不是小心心、不是热气球，而是抖音1号，最终以榜10抖音1号、总榜1000万流水的恐怖成绩豪取胜利，成功晋级深圳决赛！",
+      usageRequired: 30,
+    },
+    {
       id: "segment0515",
       path: "/test/segment0515",
       title: "今日排段(5-15)",
@@ -83,6 +91,7 @@ export const appContent: AppContent = {
       { quizId: "segment0513", coverRef: "witch" },
       { quizId: "segment0514", coverRef: "witch" },
       { quizId: "sentence", coverRef: "witch" },
+      { quizId: "sentence0519", coverRef: "witch" },
       { quizId: "segment0515", coverRef: "witch" },
     ],
   },

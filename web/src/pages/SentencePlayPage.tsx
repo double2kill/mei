@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { getQuizDef } from "../data-helpers";
 import {
@@ -17,10 +17,19 @@ import {
 } from "../components/hanzi-play/HanziPlayLayout";
 import { ToastPopup } from "../components/ToastPopup";
 
-export function SentencePlayPage() {
+type SentencePlayPageProps = {
+  sentenceQuizId?: string;
+};
+
+export function SentencePlayPage({
+  sentenceQuizId = "sentence",
+}: SentencePlayPageProps) {
   const [sentences, setSentences] = useState<string[]>([]);
   const [toast, setToast] = useState<string | null>(null);
-  const sentenceQuiz = useMemo(() => getQuizDef("sentence"), []);
+  const sentenceQuiz = useMemo(
+    () => getQuizDef(sentenceQuizId),
+    [sentenceQuizId],
+  );
   const sourceText = sentenceQuiz?.text ?? "";
   const textShuffle = useMemo(
     () => shuffledAnswerChars(sourceText),
@@ -38,6 +47,11 @@ export function SentencePlayPage() {
     captureSel,
     onTextareaChange,
   } = useHanziDraftEditor();
+
+  useEffect(() => {
+    setSentences([]);
+    resetDraft();
+  }, [sentenceQuizId, resetDraft]);
 
   const { shortageCards, surplusCards, hanziBalanced } = useHanziBalance(
     sourceText,

@@ -85,7 +85,7 @@ export function TestPlayPage() {
   }
 
   if (def.type === "sentence") {
-    return <SentencePlayPage />;
+    return <SentencePlayPage sentenceQuizId={def.id} />;
   }
 
   return (

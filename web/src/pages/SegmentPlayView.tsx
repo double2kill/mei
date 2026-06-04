@@ -16,6 +16,11 @@ import {
   HanziReferenceSection,
 } from "../components/hanzi-play/HanziPlayLayout";
 import { ToastPopup } from "../components/ToastPopup";
+import {
+  evaluateSegmentFluency,
+  hasZhipuApiKey,
+} from "../ai/segment-fluency-client";
+import { labelSegmentFluency } from "../ai/segment-fluency";
 
 type SegmentPlayViewProps = {
   settingsTo?: string;
@@ -29,9 +34,20 @@ type CheckRecord = {
   percent: number;
   matched: number;
   total: number;
+  aiScore: number | null;
+  aiReason: string | null;
+  aiPassed: boolean | null;
+};
+
+type SegmentFluencyRecord = {
+  at: number;
+  draft: string;
+  score: number;
+  reason: string;
 };
 
 const MAX_CHECK_RECORDS = 100;
+const AI_REASONABLE_SCORE = 80;
 
 const publicBase =
   typeof import.meta.env.BASE_URL === "string" ? import.meta.env.BASE_URL : "/";
@@ -68,6 +84,10 @@ export function SegmentPlayView({
     onTextareaChange,
   } = useHanziDraftEditor();
   const [checkHistory, setCheckHistory] = useState<CheckRecord[]>([]);
+  const [fluencyChecking, setFluencyChecking] = useState(false);
+  const [fluencyRecord, setFluencyRecord] = useState<SegmentFluencyRecord | null>(
+    null,
+  );
   const [adOpen, setAdOpen] = useState(false);
   const [adCountdown, setAdCountdown] = useState(0);
   const [toast, setToast] = useState<string | null>(null);
@@ -82,11 +102,14 @@ export function SegmentPlayView({
     draft,
     answerShuffle,
   );
+  const zhipuReady = hasZhipuApiKey();
 
   useEffect(() => {
     const c = loadSegmentPlayConfig(segmentQuizId);
     setCfg(c);
     setCheckHistory([]);
+    setFluencyChecking(false);
+    setFluencyRecord(null);
     setAdOpen(false);
     setAdCountdown(0);
     pendingVerifyRef.current = null;
@@ -103,8 +126,36 @@ export function SegmentPlayView({
     [checkHistory],
   );
 
-  const commitVerify = useCallback((draftSnap: string, answerText: string) => {
+  const commitVerify = useCallback(async (draftSnap: string, answerText: string) => {
     const r = hanziOrderIndexMatchRate(answerText, draftSnap);
+    let aiScore: number | null = null;
+    let aiReason: string | null = null;
+
+    try {
+      if (zhipuReady) {
+        setFluencyChecking(true);
+        const result = await evaluateSegmentFluency(draftSnap);
+        aiScore = result.score;
+        aiReason = result.reason;
+        setFluencyRecord({
+          at: Date.now(),
+          draft: draftSnap,
+          score: result.score,
+          reason: result.reason,
+        });
+      } else {
+        setFluencyRecord(null);
+      }
+    } catch (error) {
+      aiReason = error instanceof Error ? error.message : "AI 评价失败";
+      setToast(aiReason);
+      setFluencyRecord(null);
+    } finally {
+      setFluencyChecking(false);
+      pendingVerifyRef.current = null;
+      setAdOpen(false);
+    }
+
     const rec: CheckRecord = {
       id: newCheckId(),
       at: Date.now(),
@@ -112,19 +163,22 @@ export function SegmentPlayView({
       percent: r.percent,
       matched: r.matched,
       total: r.total,
+      aiScore,
+      aiReason,
+      aiPassed: aiScore !== null ? aiScore >= AI_REASONABLE_SCORE : null,
     };
     setCheckHistory((prev) => [rec, ...prev].slice(0, MAX_CHECK_RECORDS));
-  }, []);
+  }, [zhipuReady]);
 
   useEffect(() => {
     if (!adOpen) return;
     if (adCountdown <= 0) {
       const p = pendingVerifyRef.current;
-      pendingVerifyRef.current = null;
-      setAdOpen(false);
       if (p && !adVerifyConsumedRef.current) {
         adVerifyConsumedRef.current = true;
-        commitVerify(p.draft, p.answerText);
+        void commitVerify(p.draft, p.answerText);
+      } else if (!p) {
+        setAdOpen(false);
       }
       return;
     }
@@ -141,16 +195,26 @@ export function SegmentPlayView({
     setAdOpen(true);
   }, [draft, cfg.answerText]);
 
-  const verifyBlocked = adOpen || surplusCards.length > 0;
+  const verifyBlocked =
+    adOpen || fluencyChecking || !draft.trim() || surplusCards.length > 0;
+
+  const clearDraft = useCallback(() => {
+    resetDraft();
+    setFluencyRecord(null);
+  }, [resetDraft]);
 
   const tryVerify = useCallback(() => {
     if (adOpen) return;
+    if (!draft.trim()) {
+      setToast("请先输入内容");
+      return;
+    }
     if (surplusCards.length > 0) {
       setToast(surplusSubmitMessage(surplusCards, "校验"));
       return;
     }
     startVerify();
-  }, [adOpen, surplusCards, startVerify]);
+  }, [adOpen, draft, surplusCards, startVerify]);
 
   return (
     <HanziPlayLayout
@@ -172,7 +236,7 @@ export function SegmentPlayView({
       overlay={
         adOpen ? (
           <div
-            className="fixed inset-0 z-[60] flex flex-col items-center justify-center bg-black/55 p-4"
+            className="fixed inset-0 z-60 flex flex-col items-center justify-center bg-black/55 p-4"
             role="dialog"
             aria-modal="true"
             aria-labelledby="segment-ad-title"
@@ -190,7 +254,9 @@ export function SegmentPlayView({
                 >
                   {adCountdown > 0
                     ? `${adCountdown} 秒后开始校验`
-                    : "正在校验"}
+                    : fluencyChecking
+                      ? "AI 正在思考..."
+                      : "正在校验"}
                 </p>
               </div>
             </div>
@@ -235,7 +301,7 @@ export function SegmentPlayView({
         balancedRequiresDraft={false}
         submitBlocked={verifyBlocked}
         onPrimaryClick={tryVerify}
-        onReset={resetDraft}
+        onReset={clearDraft}
         insertAtCursor={insertAtCursor}
         setToast={setToast}
         footer={
@@ -243,7 +309,7 @@ export function SegmentPlayView({
             <div className="overflow-hidden rounded-lg border border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900/80">
               <div className="grid grid-cols-2 gap-0 border-b border-zinc-200 bg-zinc-100 px-3 py-2 text-xs font-semibold text-zinc-600 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
                 <span>原文</span>
-                <span>匹配度</span>
+                <span>校验结果</span>
               </div>
               <ul className="max-h-72 overflow-y-auto bg-white dark:bg-zinc-950">
                 {checkHistory.map((rec) => (
@@ -258,7 +324,7 @@ export function SegmentPlayView({
                       >
                         {new Date(rec.at).toLocaleString()}
                       </time>
-                      <p className="max-h-28 overflow-y-auto whitespace-pre-wrap break-words text-zinc-900 dark:text-zinc-100">
+                      <p className="max-h-28 overflow-y-auto whitespace-pre-wrap wrap-break-word text-zinc-900 dark:text-zinc-100">
                         {rec.draft.length > 0 ? rec.draft : "（空）"}
                       </p>
                     </div>
@@ -275,6 +341,31 @@ export function SegmentPlayView({
                       <span className="text-xs text-zinc-500 dark:text-zinc-400">
                         {rec.matched}/{rec.total} 位
                       </span>
+                      <span className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+                        {rec.aiScore === null
+                          ? "AI 未参与"
+                          : `AI ${rec.aiScore} 分`}
+                      </span>
+                      <span
+                        className={`text-xs font-medium ${
+                          rec.aiPassed === true
+                            ? "text-emerald-600 dark:text-emerald-400"
+                            : rec.aiPassed === false
+                              ? "text-rose-600 dark:text-rose-400"
+                              : "text-zinc-500 dark:text-zinc-400"
+                        }`}
+                      >
+                        {rec.aiPassed === true
+                          ? `合理（>=${AI_REASONABLE_SCORE}）`
+                          : rec.aiPassed === false
+                            ? `不合理（<${AI_REASONABLE_SCORE}）`
+                            : "未做 AI 判定"}
+                      </span>
+                      {rec.aiReason ? (
+                        <p className="mt-1 whitespace-pre-wrap wrap-break-word text-xs leading-relaxed text-zinc-500 dark:text-zinc-400">
+                          {rec.aiReason}
+                        </p>
+                      ) : null}
                     </div>
                   </li>
                 ))}
@@ -287,6 +378,66 @@ export function SegmentPlayView({
           )
         }
       />
+
+      <HanziReferenceSection
+        title="3. AI 通顺度评价"
+        description={`点击「校验汉字」时会自动进行 AI 评价；AI 分数达到 ${AI_REASONABLE_SCORE} 分才认为合理。`}
+        className="mb-0"
+      >
+        <p className="text-xs text-zinc-500 dark:text-zinc-400">
+          {zhipuReady ? "已检测到 AI 配置" : "未检测到 AI 配置"}
+        </p>
+
+        {fluencyRecord ? (
+          <div className="space-y-3 rounded-xl border border-violet-200 bg-violet-50 p-4 dark:border-violet-800/80 dark:bg-violet-950/40">
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="text-xl font-semibold tabular-nums text-violet-700 dark:text-violet-300">
+                {fluencyRecord.score} 分
+              </span>
+              <span className="rounded-full bg-white px-2.5 py-1 text-xs font-medium text-violet-700 dark:bg-violet-900 dark:text-violet-200">
+                {labelSegmentFluency(fluencyRecord.score)}
+              </span>
+              <span
+                className={`rounded-full px-2.5 py-1 text-xs font-medium ${
+                  fluencyRecord.score >= AI_REASONABLE_SCORE
+                    ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-200"
+                    : "bg-rose-100 text-rose-700 dark:bg-rose-900/60 dark:text-rose-200"
+                }`}
+              >
+                {fluencyRecord.score >= AI_REASONABLE_SCORE ? "合理" : "不合理"}
+              </span>
+              <time
+                dateTime={new Date(fluencyRecord.at).toISOString()}
+                className="text-xs text-zinc-500 dark:text-zinc-400"
+              >
+                {new Date(fluencyRecord.at).toLocaleString()}
+              </time>
+            </div>
+
+            <div className="space-y-1">
+              <h3 className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
+                待评价句子
+              </h3>
+              <p className="whitespace-pre-wrap wrap-break-word text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
+                {fluencyRecord.draft}
+              </p>
+            </div>
+
+            <div className="space-y-1">
+              <h3 className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
+                评价理由
+              </h3>
+              <p className="whitespace-pre-wrap wrap-break-word text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
+                {fluencyRecord.reason}
+              </p>
+            </div>
+          </div>
+        ) : (
+          <p className="text-sm leading-relaxed text-zinc-500 dark:text-zinc-400">
+            还没有 AI 校验记录。
+          </p>
+        )}
+      </HanziReferenceSection>
     </HanziPlayLayout>
   );
 }

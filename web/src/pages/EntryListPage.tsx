@@ -10,6 +10,8 @@ const typeLabels: Record<QuizType, string> = {
   random: "女巫的毒药",
   segment: "排段",
   sentence: "造句",
+  baike: "百科",
+  "baike-en": "百科(英)",
 };
 
 const typeStyles: Record<QuizType, string> = {
@@ -17,6 +19,8 @@ const typeStyles: Record<QuizType, string> = {
   random: "bg-blue-100 text-blue-700",
   segment: "bg-purple-100 text-purple-700",
   sentence: "bg-orange-100 text-orange-700",
+  baike: "bg-teal-100 text-teal-700",
+  "baike-en": "bg-teal-100 text-teal-800",
 };
 
 function EntryCard({ to, title, coverSrc, type }: EntryDef) {
@@ -49,21 +53,25 @@ export type EntryListPageProps = {
   entries: EntryDef[];
 };
 
-type FilterType = "witch" | "segment" | "sentence";
+type FilterType = "witch" | "segment" | "sentence" | "baike";
 
 export function EntryListPage({ heading, entries }: EntryListPageProps) {
   const [filterType, setFilterType] = useState<FilterType>("witch");
 
   const filteredEntries = entries.filter((entry) => {
     if (filterType === "witch") return entry.type === "fixed" || entry.type === "random";
+    if (filterType === "baike") {
+      return entry.type === "baike" || entry.type === "baike-en";
+    }
     return entry.type === filterType;
   });
 
-  const allTypes: FilterType[] = ["witch", "segment", "sentence"];
+  const allTypes: FilterType[] = ["witch", "segment", "sentence", "baike"];
   const filterLabels: Record<FilterType, string> = {
     witch: "🧙‍♀️ 女巫的毒药",
     segment: "📝 排段",
     sentence: "✍️ 造句",
+    baike: "📖 百科",
   };
 
   return (

@@ -1,4 +1,10 @@
-export type QuizType = "fixed" | "random" | "segment" | "sentence";
+export type QuizType =
+  | "fixed"
+  | "random"
+  | "segment"
+  | "sentence"
+  | "baike"
+  | "baike-en";
 
 export type QuizRow = {
   id: string;
@@ -9,6 +15,8 @@ export type QuizRow = {
   answerText?: string;
   text?: string;
   usageRequired?: number;
+  wikiTitle?: string;
+  wikiDetail?: string;
 };
 
 export type QuizDef = QuizRow;

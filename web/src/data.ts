@@ -58,11 +58,29 @@ export const appContent: AppContent = {
         "蒋泽宇，字湄，号帅逼居士，福建漳州人士。坚信没苦硬吃的人生信条：放着年 薪百万的工作不干，非得贷款上班搞直播。现为京城大师赛流水数一数二的头部主播。",
     },
     {
+      id: "baike",
+      path: "/test/baike",
+      title: "百科猜标题",
+      type: "baike",
+      wikiTitle: "狼人杀",
+      wikiDetail:
+        "狼人杀是一款基于心理学和逻辑推理的经典社交桌游，玩家分为狼人阵营与好人阵营，通过发言、投票与技能博弈判定胜负。",
+    },
+    {
+      id: "baike-en",
+      path: "/test/baike-en",
+      title: "Wiki Guess (EN)",
+      type: "baike-en",
+      wikiTitle: "Mount Everest",
+      wikiDetail:
+        "Mount Everest is Earth's highest mountain above sea level, standing on the border between Nepal and China. Climbers face extreme cold, thin air, and avalanches. The first confirmed summit was reached in 1953 by Edmund Hillary and Tenzing Norgay.",
+    },
+    {
       id: "sentence",
       path: "/test/sentence",
       title: "造句",
       type: "sentence",
-      text: "蒋泽宇在京城大师赛上展现了惊人的狼人杀实力，他与刘小怂、JY等顶级玩 家的精彩对决让观众大呼过瘾。",
+      text: "蒋泽宇在京城大师赛上展现了惊人的狼人杀实力，他与刘小怂、JY等顶级玩家的精彩对决让观众大呼过瘾。",
       usageRequired: 60,
     },
     {
@@ -70,7 +88,7 @@ export const appContent: AppContent = {
       path: "/test/sentence0519",
       title: "造句(5-19)",
       type: "sentence",
-      text: "号外号外，杭粤联动席位争夺赛，经过多日鏖战，流水席位的争夺只剩下湄与宝玉妹妹，他们在争夺深圳决赛席位的世纪PK中，榜100不是小心心、不是热气球，而是抖音1号，最终以榜100抖音1号、总榜1000万流水的恐怖成绩豪取胜利，成功晋级深圳决赛！",
+      text: "号外号外，杭粤联动席位争夺赛，经过多日鏖战，流水席位的争夺只剩下湄与宝玉妹妹，他们在争夺深圳决赛席位的世纪PK中，榜100不是小心心、不是热气球，而是抖音1号，湄最终以榜100抖音1号、总榜1000万流水的恐怖成绩豪取胜利，成功晋级深圳决赛！",
       usageRequired: 30,
     },
     {
@@ -90,6 +108,8 @@ export const appContent: AppContent = {
       { quizId: "segment", coverRef: "witch" },
       { quizId: "segment0513", coverRef: "witch" },
       { quizId: "segment0514", coverRef: "witch" },
+      { quizId: "baike", coverRef: "witch" },
+      { quizId: "baike-en", coverRef: "witch" },
       { quizId: "sentence", coverRef: "witch" },
       { quizId: "sentence0519", coverRef: "witch" },
       { quizId: "segment0515", coverRef: "witch" },

@@ -12,6 +12,8 @@ import { getQuizDef } from "../data-helpers";
 import { QuizPlayView } from "./QuizPlayView";
 import { SegmentPlayView } from "./SegmentPlayView";
 import { SentencePlayPage } from "./SentencePlayPage";
+import { BaikePlayPage } from "./BaikePlayPage";
+import { BaikeEnPlayPage } from "./BaikeEnPlayPage";
 
 function resolvedTitle(raw: string | null, fallback: string) {
   if (!raw?.trim()) return fallback;
@@ -86,6 +88,14 @@ export function TestPlayPage() {
 
   if (def.type === "sentence") {
     return <SentencePlayPage sentenceQuizId={def.id} />;
+  }
+
+  if (def.type === "baike") {
+    return <BaikePlayPage baikeQuizId={def.id} />;
+  }
+
+  if (def.type === "baike-en") {
+    return <BaikeEnPlayPage baikeQuizId={def.id} />;
   }
 
   return (

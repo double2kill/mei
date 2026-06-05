@@ -11,6 +11,7 @@ export type QuizRow = {
   path: string;
   title: string;
   type: QuizType;
+  coverRef?: string;
   settings?: boolean;
   answerText?: string;
   text?: string;

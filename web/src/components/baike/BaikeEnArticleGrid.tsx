@@ -1,4 +1,4 @@
-import { wordKey } from "../../test/baike-en-play";
+import { baikeEnWordRevealed } from "../../test/baike-en-play";
 
 const WORD_RE = /[A-Za-z]+(?:'[A-Za-z]+)?/g;
 
@@ -49,8 +49,7 @@ export function BaikeEnArticleGrid({
                 </span>
               );
             }
-            const key = wordKey(tok.text);
-            const revealed = revealAll || guessed.has(key);
+            const revealed = revealAll || baikeEnWordRevealed(tok.text, guessed);
             const hitStyle =
               isTitle && titleHighlight && revealed
                 ? "border-emerald-600 bg-emerald-50 text-emerald-900"

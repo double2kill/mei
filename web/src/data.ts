@@ -9,6 +9,9 @@ export const defaultCardCover =
 export const evaCardCover =
   (base.endsWith("/") ? base : `${base}/`) + "eva-witch.png";
 
+export const meiWarriorCardCover =
+  (base.endsWith("/") ? base : `${base}/`) + "mei-warrior.png";
+
 export const appContent: AppContent = {
   version: 1,
   quizzes: [
@@ -71,9 +74,19 @@ export const appContent: AppContent = {
       path: "/test/baike-en",
       title: "Wiki Guess (EN)",
       type: "baike-en",
-      wikiTitle: "Mount Everest",
-      wikiDetail:
-        "Mount Everest is Earth's highest mountain above sea level, standing on the border between Nepal and China. Climbers face extreme cold, thin air, and avalanches. The first confirmed summit was reached in 1953 by Edmund Hillary and Tenzing Norgay.",
+      wikiTitle: "Wikipedia",
+      wikiDetail: [
+        "Wikipedia is a free online encyclopedia written and edited by volunteers around the world.",
+        "It is hosted by the Wikimedia Foundation, a nonprofit organization, and built through open collaboration.",
+        "People can create, revise, translate, and discuss articles in many languages, while other editors review changes and improve the text over time.",
+        "The project collects information on history, science, culture, technology, geography, politics, people, places, art, medicine, sports, and many other subjects.",
+        "Readers often use Wikipedia as a starting point for learning because articles summarize a topic, explain important ideas, link to related pages, and cite published sources for further reading.",
+        "A typical article may include an introduction, background, sections, dates, names, images, tables, references, categories, and links to other articles.",
+        "Editors improve pages by adding sources, fixing errors, checking neutrality, organizing sections, removing spam, translating content, and updating information when reliable sources become available.",
+        "Wikipedia also has community rules, discussion pages, revision histories, watchlists, bots, and moderation tools that help contributors debate changes and protect articles from vandalism.",
+        "Because anyone can edit many pages, readers are encouraged to check references, compare sources, and treat the encyclopedia as a guide rather than a final authority.",
+        "Its strength comes from repeated editing, shared knowledge, public records of changes, and a large community that keeps improving articles after they are published.",
+      ].join(" "),
     },
     {
       id: "sentence",
@@ -96,6 +109,7 @@ export const appContent: AppContent = {
       path: "/test/segment0515",
       title: "今日排段(5-15)",
       type: "segment",
+      coverRef: "mei-warrior",
       settings: false,
       answerText:
         "在那山的那边海的那边有个湄少男战士，他爱穿比基尼，他在抖音行乞。他号召众人齐集暮光星辰之力，他住在三千钻的星光庄园里。",

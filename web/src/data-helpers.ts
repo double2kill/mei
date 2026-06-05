@@ -1,4 +1,9 @@
-import { appContent, defaultCardCover, evaCardCover } from "./data";
+import {
+  appContent,
+  defaultCardCover,
+  evaCardCover,
+  meiWarriorCardCover,
+} from "./data";
 import type {
   EntryDef,
   QuizDef,
@@ -23,14 +28,21 @@ export function getQuizDef(id: string | undefined): QuizDef | null {
 const coverByRef: Record<string, string> = {
   witch: defaultCardCover,
   eva: evaCardCover,
+  "mei-warrior": meiWarriorCardCover,
 };
+
+function resolveCoverRef(quizId: string, rowCoverRef: string): string {
+  const q = appContent.quizzes.find((x) => x.id === quizId);
+  return q?.coverRef ?? rowCoverRef;
+}
 
 function screenRowToEntry(row: { quizId: string; coverRef: string }): EntryDef {
   const q = appContent.quizzes.find((x) => x.id === row.quizId);
   if (!q) {
     throw new Error(`appContent: unknown quizId "${row.quizId}"`);
   }
-  const coverSrc = coverByRef[row.coverRef] ?? defaultCardCover;
+  const coverRef = resolveCoverRef(row.quizId, row.coverRef);
+  const coverSrc = coverByRef[coverRef] ?? defaultCardCover;
   return { to: q.path, title: q.title, coverSrc, type: q.type };
 }
 

@@ -15,7 +15,9 @@
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "react-router-dom": "^7.9.4",
-    "serve": "^14.2.5"
+    "serve": "^14.2.5",
+    "wink-eng-lite-web-model": "^1.8.1",
+    "wink-nlp": "^2.4.0"
   },
   "devDependencies": {
     "@rsbuild/core": "^1.4.15",

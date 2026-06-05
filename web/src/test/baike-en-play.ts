@@ -1,17 +1,32 @@
+import { englishLemma } from "./baike-en-lemma.js";
+
 export const BAIKE_MAX_ATTEMPTS = 20;
 export const BAIKE_EN_MAX_BATCH = 10;
 
 const WORD_RE = /[A-Za-z]+(?:'[A-Za-z]+)?/g;
 
 export type BaikeEnGuessResult = {
+  guesses: BaikeEnGuessItem[];
   newWords: string[];
   missWords: string[];
   attemptDelta: number;
   titleDone: boolean;
 };
 
+export type BaikeEnGuessItem = {
+  word: string;
+  hit: boolean;
+};
+
 export function wordKey(word: string): string {
-  return word.toLowerCase();
+  return englishLemma(word);
+}
+
+export function baikeEnWordRevealed(
+  word: string,
+  guessed: ReadonlySet<string>,
+): boolean {
+  return guessed.has(wordKey(word));
 }
 
 export function extractEnglishWords(s: string): string[] {
@@ -33,7 +48,7 @@ export function baikeEnArticleWordKeys(title: string, detail: string): Set<strin
 export function titleWordsGuessed(title: string, guessed: ReadonlySet<string>): boolean {
   const words = extractEnglishWords(title);
   if (words.length === 0) return true;
-  return words.every((w) => guessed.has(wordKey(w)));
+  return words.every((w) => baikeEnWordRevealed(w, guessed));
 }
 
 export function batchWordCount(batch: string): number {
@@ -70,21 +85,25 @@ export function processBaikeEnBatch(
   }
   const newWords: string[] = [];
   const missWords: string[] = [];
+  const guesses: BaikeEnGuessItem[] = [];
   for (const { key, display } of orderedUniqueWords(trimmed)) {
     if (articleKeys.has(key)) {
       if (guessed.has(key)) continue;
       guessed.add(key);
       newWords.push(display);
+      guesses.push({ word: display, hit: true });
     } else {
       if (missed.has(key)) continue;
       missed.add(key);
       missWords.push(display);
+      guesses.push({ word: display, hit: false });
     }
   }
   const titleDone = titleWordsGuessed(title, guessed);
   return {
     ok: true,
     result: {
+      guesses,
       newWords,
       missWords,
       attemptDelta: newWords.length + missWords.length,

@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
   BAIKE_EN_MAX_BATCH,
+  baikeEnWordRevealed,
   batchWordCount,
   baikeEnArticleWordKeys,
   processBaikeEnBatch,
@@ -10,7 +11,12 @@ import {
 } from "./baike-en-play.js";
 
 describe("baike-en-play", () => {
-  it("should require full word match when guessing article words", () => {
+  it("should map verb inflections to same lemma key", () => {
+    assert.equal(wordKey("is"), wordKey("was"));
+    assert.equal(wordKey("is"), "be");
+  });
+
+  it("should require lemma match not partial word when guessing article words", () => {
     const title = "Werewolf";
     const article = baikeEnArticleWordKeys(title, "A social game");
     const guessed = new Set<string>();
@@ -20,6 +26,7 @@ describe("baike-en-play", () => {
     if (r.ok) {
       assert.deepEqual(r.result.newWords, []);
       assert.deepEqual(r.result.missWords, ["wolf"]);
+      assert.deepEqual(r.result.guesses, [{ word: "wolf", hit: false }]);
       assert.equal(r.result.attemptDelta, 1);
     }
   });
@@ -34,6 +41,7 @@ describe("baike-en-play", () => {
     if (r.ok) {
       assert.equal(r.result.titleDone, true);
       assert.deepEqual(r.result.newWords, ["Werewolf"]);
+      assert.deepEqual(r.result.guesses, [{ word: "Werewolf", hit: true }]);
     }
   });
 
@@ -46,7 +54,69 @@ describe("baike-en-play", () => {
     assert.equal(r.ok, true);
     if (r.ok) {
       assert.deepEqual(r.result.newWords, ["Game"]);
+      assert.deepEqual(r.result.guesses, [{ word: "Game", hit: true }]);
       assert.equal(r.result.attemptDelta, 1);
+    }
+  });
+
+  it("should keep guess history items in batch order", () => {
+    const article = baikeEnArticleWordKeys("Wikipedia", "Readers edit pages");
+    const guessed = new Set<string>();
+    const missed = new Set<string>();
+    const r = processBaikeEnBatch(
+      "Wikipedia",
+      article,
+      guessed,
+      missed,
+      "reader banana page",
+    );
+    assert.equal(r.ok, true);
+    if (r.ok) {
+      assert.deepEqual(r.result.guesses, [
+        { word: "reader", hit: true },
+        { word: "banana", hit: false },
+        { word: "page", hit: true },
+      ]);
+    }
+  });
+
+  it("should hit when guess lemma matches article word lemma", () => {
+    const title = "Peak";
+    const article = baikeEnArticleWordKeys(title, "He was there");
+    const guessed = new Set<string>();
+    const missed = new Set<string>();
+    const r = processBaikeEnBatch(title, article, guessed, missed, "is");
+    assert.equal(r.ok, true);
+    if (r.ok) {
+      assert.deepEqual(r.result.newWords, ["is"]);
+      assert.deepEqual(r.result.missWords, []);
+      assert.equal(r.result.attemptDelta, 1);
+      assert.ok(guessed.has("be"));
+    }
+  });
+
+  it("should reveal plural nouns when singular form is guessed", () => {
+    const article = baikeEnArticleWordKeys("Mountain", "Climbers study routes");
+    const guessed = new Set<string>();
+    const missed = new Set<string>();
+    const r = processBaikeEnBatch("Mountain", article, guessed, missed, "climber");
+    assert.equal(r.ok, true);
+    if (r.ok) {
+      assert.deepEqual(r.result.newWords, ["climber"]);
+      assert.equal(r.result.attemptDelta, 1);
+      assert.equal(baikeEnWordRevealed("climbers", guessed), true);
+    }
+  });
+
+  it("should reveal inflected verbs when base form is guessed", () => {
+    const article = baikeEnArticleWordKeys("Article", "Readers reach pages");
+    const guessed = new Set<string>();
+    const missed = new Set<string>();
+    const r = processBaikeEnBatch("Article", article, guessed, missed, "reach");
+    assert.equal(r.ok, true);
+    if (r.ok) {
+      assert.deepEqual(r.result.newWords, ["reach"]);
+      assert.equal(baikeEnWordRevealed("reaches", guessed), true);
     }
   });
 

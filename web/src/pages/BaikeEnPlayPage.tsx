@@ -9,6 +9,7 @@ import {
   processBaikeEnBatch,
   titleWordsGuessed,
   wordKey,
+  type BaikeEnGuessItem,
 } from "../test/baike-en-play";
 import { useHanziDraftEditor } from "../hooks/useHanziDraftEditor";
 import { HanziPlayLayout, HanziPlayHeader } from "../components/hanzi-play/HanziPlayLayout";
@@ -19,9 +20,15 @@ type BaikeEnPlayPageProps = {
   baikeQuizId?: string;
 };
 
+type GuessHistoryEntry = BaikeEnGuessItem & {
+  id: string;
+};
+
 export function BaikeEnPlayPage({ baikeQuizId = "baike-en" }: BaikeEnPlayPageProps) {
   const [toast, setToast] = useState<string | null>(null);
   const [guessed, setGuessed] = useState<Set<string>>(() => new Set());
+  const [hitOrder, setHitOrder] = useState<string[]>([]);
+  const [guessHistory, setGuessHistory] = useState<GuessHistoryEntry[]>([]);
   const [missOrder, setMissOrder] = useState<string[]>([]);
   const [attempts, setAttempts] = useState(0);
   const [won, setWon] = useState(false);
@@ -43,6 +50,8 @@ export function BaikeEnPlayPage({ baikeQuizId = "baike-en" }: BaikeEnPlayPagePro
 
   useEffect(() => {
     setGuessed(new Set());
+    setHitOrder([]);
+    setGuessHistory([]);
     setMissOrder([]);
     setAttempts(0);
     setWon(false);
@@ -82,17 +91,35 @@ export function BaikeEnPlayPage({ baikeQuizId = "baike-en" }: BaikeEnPlayPagePro
       setToast(outcome.reason);
       return;
     }
-    const { missWords, attemptDelta, titleDone } = outcome.result;
+    const { guesses, newWords, missWords, attemptDelta, titleDone } =
+      outcome.result;
     if (attemptDelta === 0) {
       setToast("No new words in this batch");
       return;
     }
     setGuessed(guessedSnap);
+    setHitOrder((prev) => [...prev, ...newWords]);
+    setGuessHistory((prev) => [
+      ...prev,
+      ...guesses.map((g, i) => ({
+        ...g,
+        id: `${attempts}-${i}-${g.word}-${g.hit ? "hit" : "miss"}`,
+      })),
+    ]);
     setMissOrder((prev) => [...prev, ...missWords]);
     setAttempts((n) => n + attemptDelta);
     if (titleDone) setWon(true);
     resetDraft();
-  }, [canGuess, guessed, missOrder, wikiTitle, articleKeys, draft, resetDraft]);
+  }, [
+    canGuess,
+    guessed,
+    missOrder,
+    wikiTitle,
+    articleKeys,
+    draft,
+    attempts,
+    resetDraft,
+  ]);
 
   const onDraftChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -209,26 +236,124 @@ export function BaikeEnPlayPage({ baikeQuizId = "baike-en" }: BaikeEnPlayPagePro
           ) : null}
         </div>
 
-        <div className="rounded-2xl bg-zinc-50/80 px-4 py-4 ring-1 ring-zinc-200/60 dark:bg-zinc-900/60 dark:ring-zinc-800">
-          <p className="mb-2 text-xs font-medium tracking-wide text-zinc-500 uppercase dark:text-zinc-400">
-            Not in article
-          </p>
-          {missOrder.length > 0 ? (
-            <div className="flex flex-wrap gap-2">
-              {missOrder.map((w, i) => (
-                <span
-                  key={`miss-${w}-${i}`}
-                  className="inline-flex min-h-8 items-center justify-center rounded-md bg-red-500 px-2.5 text-sm font-semibold text-white shadow-sm sm:text-base dark:bg-red-600"
-                >
-                  {w}
-                </span>
-              ))}
-            </div>
-          ) : (
-            <p className="text-sm text-zinc-400 dark:text-zinc-500">—</p>
-          )}
+        <div className="xl:hidden">
+          <BaikeEnGuessSidebar
+            hitOrder={hitOrder}
+            guessHistory={guessHistory}
+            missOrder={missOrder}
+          />
         </div>
       </div>
+
+      <div className="fixed top-24 right-[max(1rem,calc((100vw-42rem)/4-9rem))] bottom-4 z-30 hidden w-72 overflow-y-auto xl:block">
+        <BaikeEnGuessSidebar
+          hitOrder={hitOrder}
+          guessHistory={guessHistory}
+          missOrder={missOrder}
+        />
+      </div>
     </HanziPlayLayout>
+  );
+}
+
+type BaikeEnGuessSidebarProps = {
+  hitOrder: string[];
+  guessHistory: GuessHistoryEntry[];
+  missOrder: string[];
+};
+
+function BaikeEnGuessSidebar({
+  hitOrder,
+  guessHistory,
+  missOrder,
+}: BaikeEnGuessSidebarProps) {
+  return (
+    <aside className="space-y-4">
+      <section className="rounded-2xl bg-white px-4 py-4 shadow-sm ring-1 ring-zinc-200/90 dark:bg-zinc-900 dark:ring-zinc-700">
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+            已命中
+          </h2>
+          <span className="text-xs tabular-nums text-zinc-400 dark:text-zinc-500">
+            {hitOrder.length}
+          </span>
+        </div>
+        {hitOrder.length > 0 ? (
+          <div className="flex max-h-56 flex-wrap gap-2 overflow-y-auto pr-1">
+            {hitOrder.map((w, i) => (
+              <span
+                key={`hit-${w}-${i}`}
+                className="inline-flex min-h-8 max-w-full items-center justify-center rounded-md bg-emerald-500 px-2.5 text-sm font-semibold break-all text-white shadow-sm dark:bg-emerald-600"
+              >
+                {w}
+              </span>
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-zinc-400 dark:text-zinc-500">—</p>
+        )}
+      </section>
+
+      <section className="rounded-2xl bg-white px-4 py-4 shadow-sm ring-1 ring-zinc-200/90 dark:bg-zinc-900 dark:ring-zinc-700">
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+            猜测历史
+          </h2>
+          <span className="text-xs tabular-nums text-zinc-400 dark:text-zinc-500">
+            {guessHistory.length}
+          </span>
+        </div>
+        {guessHistory.length > 0 ? (
+          <ol className="max-h-72 space-y-2 overflow-y-auto pr-1">
+            {guessHistory.map((item, i) => (
+              <li
+                key={item.id}
+                className="flex min-h-8 items-center justify-between gap-3 rounded-lg bg-zinc-50 px-2.5 py-1.5 text-sm dark:bg-zinc-950/70"
+              >
+                <span className="min-w-0 flex-1 break-all font-medium text-zinc-800 dark:text-zinc-200">
+                  {i + 1}. {item.word}
+                </span>
+                <span
+                  className={`shrink-0 rounded-md px-2 py-0.5 text-xs font-semibold ${
+                    item.hit
+                      ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"
+                      : "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300"
+                  }`}
+                >
+                  {item.hit ? "命中" : "未中"}
+                </span>
+              </li>
+            ))}
+          </ol>
+        ) : (
+          <p className="text-sm text-zinc-400 dark:text-zinc-500">—</p>
+        )}
+      </section>
+
+      <section className="rounded-2xl bg-zinc-50/80 px-4 py-4 ring-1 ring-zinc-200/60 dark:bg-zinc-900/60 dark:ring-zinc-800">
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <h2 className="text-sm font-semibold text-zinc-700 dark:text-zinc-200">
+            未命中
+          </h2>
+          <span className="text-xs tabular-nums text-zinc-400 dark:text-zinc-500">
+            {missOrder.length}
+          </span>
+        </div>
+        {missOrder.length > 0 ? (
+          <div className="flex max-h-44 flex-wrap gap-2 overflow-y-auto pr-1">
+            {missOrder.map((w, i) => (
+              <span
+                key={`miss-${w}-${i}`}
+                className="inline-flex min-h-8 max-w-full items-center justify-center rounded-md bg-red-500 px-2.5 text-sm font-semibold break-all text-white shadow-sm dark:bg-red-600"
+              >
+                {w}
+              </span>
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-zinc-400 dark:text-zinc-500">—</p>
+        )}
+      </section>
+    </aside>
   );
 }

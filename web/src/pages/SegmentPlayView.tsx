@@ -51,8 +51,8 @@ const AI_REASONABLE_SCORE = 80;
 
 const publicBase =
   typeof import.meta.env.BASE_URL === "string" ? import.meta.env.BASE_URL : "/";
-const meiGouAdSrc =
-  (publicBase.endsWith("/") ? publicBase : `${publicBase}/`) + "mei-gou.png";
+const meiDogAdSrc =
+  (publicBase.endsWith("/") ? publicBase : `${publicBase}/`) + "mei-dog.png";
 
 function newCheckId(): string {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
@@ -85,9 +85,8 @@ export function SegmentPlayView({
   } = useHanziDraftEditor();
   const [checkHistory, setCheckHistory] = useState<CheckRecord[]>([]);
   const [fluencyChecking, setFluencyChecking] = useState(false);
-  const [fluencyRecord, setFluencyRecord] = useState<SegmentFluencyRecord | null>(
-    null,
-  );
+  const [fluencyRecord, setFluencyRecord] =
+    useState<SegmentFluencyRecord | null>(null);
   const [adOpen, setAdOpen] = useState(false);
   const [adCountdown, setAdCountdown] = useState(0);
   const [toast, setToast] = useState<string | null>(null);
@@ -126,49 +125,52 @@ export function SegmentPlayView({
     [checkHistory],
   );
 
-  const commitVerify = useCallback(async (draftSnap: string, answerText: string) => {
-    const r = hanziOrderIndexMatchRate(answerText, draftSnap);
-    let aiScore: number | null = null;
-    let aiReason: string | null = null;
+  const commitVerify = useCallback(
+    async (draftSnap: string, answerText: string) => {
+      const r = hanziOrderIndexMatchRate(answerText, draftSnap);
+      let aiScore: number | null = null;
+      let aiReason: string | null = null;
 
-    try {
-      if (zhipuReady) {
-        setFluencyChecking(true);
-        const result = await evaluateSegmentFluency(draftSnap);
-        aiScore = result.score;
-        aiReason = result.reason;
-        setFluencyRecord({
-          at: Date.now(),
-          draft: draftSnap,
-          score: result.score,
-          reason: result.reason,
-        });
-      } else {
+      try {
+        if (zhipuReady) {
+          setFluencyChecking(true);
+          const result = await evaluateSegmentFluency(draftSnap);
+          aiScore = result.score;
+          aiReason = result.reason;
+          setFluencyRecord({
+            at: Date.now(),
+            draft: draftSnap,
+            score: result.score,
+            reason: result.reason,
+          });
+        } else {
+          setFluencyRecord(null);
+        }
+      } catch (error) {
+        aiReason = error instanceof Error ? error.message : "AI 评价失败";
+        setToast(aiReason);
         setFluencyRecord(null);
+      } finally {
+        setFluencyChecking(false);
+        pendingVerifyRef.current = null;
+        setAdOpen(false);
       }
-    } catch (error) {
-      aiReason = error instanceof Error ? error.message : "AI 评价失败";
-      setToast(aiReason);
-      setFluencyRecord(null);
-    } finally {
-      setFluencyChecking(false);
-      pendingVerifyRef.current = null;
-      setAdOpen(false);
-    }
 
-    const rec: CheckRecord = {
-      id: newCheckId(),
-      at: Date.now(),
-      draft: draftSnap,
-      percent: r.percent,
-      matched: r.matched,
-      total: r.total,
-      aiScore,
-      aiReason,
-      aiPassed: aiScore !== null ? aiScore >= AI_REASONABLE_SCORE : null,
-    };
-    setCheckHistory((prev) => [rec, ...prev].slice(0, MAX_CHECK_RECORDS));
-  }, [zhipuReady]);
+      const rec: CheckRecord = {
+        id: newCheckId(),
+        at: Date.now(),
+        draft: draftSnap,
+        percent: r.percent,
+        matched: r.matched,
+        total: r.total,
+        aiScore,
+        aiReason,
+        aiPassed: aiScore !== null ? aiScore >= AI_REASONABLE_SCORE : null,
+      };
+      setCheckHistory((prev) => [rec, ...prev].slice(0, MAX_CHECK_RECORDS));
+    },
+    [zhipuReady],
+  );
 
   useEffect(() => {
     if (!adOpen) return;
@@ -243,7 +245,7 @@ export function SegmentPlayView({
           >
             <div className="max-h-[90vh] w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-zinc-900">
               <img
-                src={meiGouAdSrc}
+                src={meiDogAdSrc}
                 alt=""
                 className="max-h-[55vh] w-full object-contain"
               />
@@ -263,9 +265,7 @@ export function SegmentPlayView({
           </div>
         ) : null
       }
-      toast={
-        <ToastPopup message={toast} onDismiss={() => setToast(null)} />
-      }
+      toast={<ToastPopup message={toast} onDismiss={() => setToast(null)} />}
     >
       <HanziReferenceSection
         title="1. 参考答案（随机打乱）"

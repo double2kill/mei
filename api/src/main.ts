@@ -8,7 +8,7 @@ async function bootstrap() {
   app.enableCors({
     origin: process.env.CORS_ORIGIN?.split(",").map((s) => s.trim()) ?? true,
   });
-  const port = Number(process.env.PORT ?? 8667);
+  const port = Number(process.env.PORT ?? 8655);
   await app.listen(port);
 }
 

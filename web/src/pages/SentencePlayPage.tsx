@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { getQuizDef } from "../data-helpers";
+import type { QuizDef } from "../type";
 import {
   collectHanziMultiset,
   extractHanziArray,
@@ -18,19 +18,13 @@ import {
 import { ToastPopup } from "../components/ToastPopup";
 
 type SentencePlayPageProps = {
-  sentenceQuizId?: string;
+  quiz: QuizDef;
 };
 
-export function SentencePlayPage({
-  sentenceQuizId = "sentence",
-}: SentencePlayPageProps) {
+export function SentencePlayPage({ quiz }: SentencePlayPageProps) {
   const [sentences, setSentences] = useState<string[]>([]);
   const [toast, setToast] = useState<string | null>(null);
-  const sentenceQuiz = useMemo(
-    () => getQuizDef(sentenceQuizId),
-    [sentenceQuizId],
-  );
-  const sourceText = sentenceQuiz?.text ?? "";
+  const sourceText = quiz.text ?? "";
   const textShuffle = useMemo(
     () => shuffledAnswerChars(sourceText),
     [sourceText],
@@ -51,7 +45,7 @@ export function SentencePlayPage({
   useEffect(() => {
     setSentences([]);
     resetDraft();
-  }, [sentenceQuizId, resetDraft]);
+  }, [quiz.id, resetDraft]);
 
   const { shortageCards, surplusCards, hanziBalanced } = useHanziBalance(
     sourceText,
@@ -69,7 +63,7 @@ export function SentencePlayPage({
     }
     const percentage =
       totalChars > 0 ? Math.round((validHanzi / totalChars) * 100) : 0;
-    const required = sentenceQuiz?.usageRequired || 0;
+    const required = quiz.usageRequired || 0;
     return {
       used: validHanzi,
       total: totalChars,
@@ -77,7 +71,7 @@ export function SentencePlayPage({
       required,
       meetsRequirement: percentage >= required,
     };
-  }, [draft, hanziTotal, sentenceQuiz?.usageRequired, sourceText]);
+  }, [draft, hanziTotal, quiz.usageRequired, sourceText]);
 
   const submitBlocked =
     draft.length === 0 ||
@@ -107,7 +101,7 @@ export function SentencePlayPage({
     <HanziPlayLayout
       header={
         <HanziPlayHeader
-          title={sentenceQuiz?.title.trim() || "造句"}
+          title={quiz.title.trim() || "造句"}
           trailing={
             <Link
               to="/"

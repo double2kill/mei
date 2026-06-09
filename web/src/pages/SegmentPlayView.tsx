@@ -1,4 +1,4 @@
-import { Link, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   hanziOrderIndexMatchRate,
@@ -21,10 +21,10 @@ import {
   hasZhipuApiKey,
 } from "../ai/segment-fluency-client";
 import { labelSegmentFluency } from "../ai/segment-fluency";
+import type { QuizDef } from "../type";
 
 type SegmentPlayViewProps = {
-  settingsTo?: string;
-  segmentQuizId?: string;
+  quiz: QuizDef;
 };
 
 type CheckRecord = {
@@ -61,14 +61,11 @@ function newCheckId(): string {
   return `chk-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
-export function SegmentPlayView({
-  settingsTo,
-  segmentQuizId = "segment",
-}: SegmentPlayViewProps) {
+export function SegmentPlayView({ quiz }: SegmentPlayViewProps) {
   const location = useLocation();
   const routeKeyRef = useRef(location.key);
   const [cfg, setCfg] = useState<SegmentPlayConfig>(() =>
-    loadSegmentPlayConfig(segmentQuizId),
+    loadSegmentPlayConfig(quiz.id, quiz),
   );
   const [shuffleNonce, setShuffleNonce] = useState(0);
   const answerShuffle = useMemo(
@@ -104,7 +101,7 @@ export function SegmentPlayView({
   const zhipuReady = hasZhipuApiKey();
 
   useEffect(() => {
-    const c = loadSegmentPlayConfig(segmentQuizId);
+    const c = loadSegmentPlayConfig(quiz.id, quiz);
     setCfg(c);
     setCheckHistory([]);
     setFluencyChecking(false);
@@ -118,7 +115,7 @@ export function SegmentPlayView({
       routeKeyRef.current = location.key;
       setShuffleNonce((n) => n + 1);
     }
-  }, [location.key, segmentQuizId, resetDraft]);
+  }, [location.key, quiz, resetDraft]);
 
   const answerRevealed = useMemo(
     () => checkHistory.some((r) => r.percent >= 50),
@@ -221,19 +218,7 @@ export function SegmentPlayView({
   return (
     <HanziPlayLayout
       header={
-        <HanziPlayHeader
-          title={cfg.title.trim() || "每日排段"}
-          trailing={
-            settingsTo ? (
-              <Link
-                to={settingsTo}
-                className="touch-manipulation shrink-0 self-start rounded-lg px-4 py-2.5 text-base font-medium text-zinc-600 active:bg-zinc-200 sm:px-3 sm:py-1.5 sm:text-sm dark:text-zinc-400 dark:active:bg-zinc-800"
-              >
-                设置
-              </Link>
-            ) : null
-          }
-        />
+        <HanziPlayHeader title={cfg.title.trim() || "每日排段"} />
       }
       overlay={
         adOpen ? (

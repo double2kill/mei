@@ -1,4 +1,4 @@
-import { segmentDefaultPlayForQuizId } from "../data-helpers";
+import type { QuizDef } from "../type";
 
 export type SegmentPlayConfig = {
   title: string;
@@ -125,17 +125,24 @@ export function hanziSurplusVsAnswer(
   return out;
 }
 
+export function segmentDefaultFromQuiz(quiz: QuizDef | null): SegmentPlayConfig {
+  if (quiz?.type === "segment" && typeof quiz.answerText === "string") {
+    return { title: quiz.title, answerText: quiz.answerText };
+  }
+  return { title: "排段", answerText: "" };
+}
+
 export function defaultSegmentPlayConfig(
-  quizId = "segment",
+  quiz: QuizDef | null = null,
 ): SegmentPlayConfig {
-  return { ...segmentDefaultPlayForQuizId(quizId) };
+  return { ...segmentDefaultFromQuiz(quiz) };
 }
 
 function parseStoredSegment(
   v: Partial<SegmentPlayConfig>,
-  quizId: string,
+  quiz: QuizDef | null,
 ): SegmentPlayConfig {
-  const d = defaultSegmentPlayConfig(quizId);
+  const d = defaultSegmentPlayConfig(quiz);
   return {
     title:
       typeof v.title === "string" && v.title.trim() ? v.title.trim() : d.title,
@@ -143,15 +150,18 @@ function parseStoredSegment(
   };
 }
 
-export function loadSegmentPlayConfig(quizId = "segment"): SegmentPlayConfig {
-  if (typeof window === "undefined") return defaultSegmentPlayConfig(quizId);
+export function loadSegmentPlayConfig(
+  quizId = "segment",
+  quiz: QuizDef | null = null,
+): SegmentPlayConfig {
+  if (typeof window === "undefined") return defaultSegmentPlayConfig(quiz);
   try {
     const raw = window.localStorage.getItem(segmentStorageKey(quizId));
-    if (!raw) return defaultSegmentPlayConfig(quizId);
+    if (!raw) return defaultSegmentPlayConfig(quiz);
     const v = JSON.parse(raw) as Partial<SegmentPlayConfig>;
-    return parseStoredSegment(v, quizId);
+    return parseStoredSegment(v, quiz);
   } catch {
-    return defaultSegmentPlayConfig(quizId);
+    return defaultSegmentPlayConfig(quiz);
   }
 }
 

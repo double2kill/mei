@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { getQuizDef } from "../data-helpers";
+import type { QuizDef } from "../type";
 import {
   BAIKE_EN_MAX_BATCH,
   BAIKE_MAX_ATTEMPTS,
@@ -17,14 +17,14 @@ import { BaikeEnArticleGrid } from "../components/baike/BaikeEnArticleGrid";
 import { ToastPopup } from "../components/ToastPopup";
 
 type BaikeEnPlayPageProps = {
-  baikeQuizId?: string;
+  quiz: QuizDef;
 };
 
 type GuessHistoryEntry = BaikeEnGuessItem & {
   id: string;
 };
 
-export function BaikeEnPlayPage({ baikeQuizId = "baike-en" }: BaikeEnPlayPageProps) {
+export function BaikeEnPlayPage({ quiz }: BaikeEnPlayPageProps) {
   const [toast, setToast] = useState<string | null>(null);
   const [guessed, setGuessed] = useState<Set<string>>(() => new Set());
   const [hitOrder, setHitOrder] = useState<string[]>([]);
@@ -33,9 +33,8 @@ export function BaikeEnPlayPage({ baikeQuizId = "baike-en" }: BaikeEnPlayPagePro
   const [attempts, setAttempts] = useState(0);
   const [won, setWon] = useState(false);
   const [gaveUp, setGaveUp] = useState(false);
-  const quiz = useMemo(() => getQuizDef(baikeQuizId), [baikeQuizId]);
-  const wikiTitle = quiz?.wikiTitle?.trim() ?? "";
-  const wikiDetail = quiz?.wikiDetail?.trim() ?? "";
+  const wikiTitle = quiz.wikiTitle?.trim() ?? "";
+  const wikiDetail = quiz.wikiDetail?.trim() ?? "";
   const articleKeys = useMemo(
     () => baikeEnArticleWordKeys(wikiTitle, wikiDetail),
     [wikiTitle, wikiDetail],
@@ -57,7 +56,7 @@ export function BaikeEnPlayPage({ baikeQuizId = "baike-en" }: BaikeEnPlayPagePro
     setWon(false);
     setGaveUp(false);
     resetDraft();
-  }, [baikeQuizId, resetDraft]);
+  }, [quiz.id, resetDraft]);
 
   const revealed = won || gaveUp;
   const canGuess = !revealed;

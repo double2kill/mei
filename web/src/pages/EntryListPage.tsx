@@ -1,27 +1,10 @@
-import { useState } from "react";
+import useUrlState from "@ahooksjs/use-url-state";
 import { Link } from "react-router-dom";
-import type { EntryDef, QuizType } from "../type";
+import { quizTypeLabels, quizTypeStyles } from "../quiz-type-meta";
+import type { EntryDef } from "../type";
 
 const cardClass =
   "flex h-full w-full flex-col overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-sm transition hover:border-zinc-300 hover:shadow-md active:scale-[0.99] dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700";
-
-const typeLabels: Record<QuizType, string> = {
-  fixed: "女巫的毒药",
-  random: "女巫的毒药",
-  segment: "排段",
-  sentence: "造句",
-  baike: "百科",
-  "baike-en": "百科(英)",
-};
-
-const typeStyles: Record<QuizType, string> = {
-  fixed: "bg-blue-100 text-blue-700",
-  random: "bg-blue-100 text-blue-700",
-  segment: "bg-purple-100 text-purple-700",
-  sentence: "bg-orange-100 text-orange-700",
-  baike: "bg-teal-100 text-teal-700",
-  "baike-en": "bg-teal-100 text-teal-800",
-};
 
 function EntryCard({ to, title, coverSrc, type }: EntryDef) {
   return (
@@ -39,9 +22,9 @@ function EntryCard({ to, title, coverSrc, type }: EntryDef) {
           {title}
         </span>
         <span
-          className={`mt-1.5 inline-block rounded-full px-2 py-0.5 text-xs font-medium ${typeStyles[type]}`}
+          className={`mt-1.5 inline-block rounded-full px-2 py-0.5 text-xs font-medium ${quizTypeStyles[type]}`}
         >
-          {typeLabels[type]}
+          {quizTypeLabels[type]}
         </span>
       </div>
     </Link>
@@ -53,20 +36,38 @@ export type EntryListPageProps = {
   entries: EntryDef[];
 };
 
-type FilterType = "witch" | "segment" | "sentence" | "baike";
+const FILTER_TYPES = ["baike", "witch", "segment", "sentence"] as const;
+type FilterType = (typeof FILTER_TYPES)[number];
+
+const DEFAULT_FILTER: FilterType = "baike";
+
+function parseFilterType(value: unknown): FilterType {
+  if (
+    typeof value === "string" &&
+    FILTER_TYPES.includes(value as FilterType)
+  ) {
+    return value as FilterType;
+  }
+  return DEFAULT_FILTER;
+}
 
 export function EntryListPage({ heading, entries }: EntryListPageProps) {
-  const [filterType, setFilterType] = useState<FilterType>("witch");
+  const [urlState, setUrlState] = useUrlState<{ type: FilterType }>(
+    { type: DEFAULT_FILTER },
+    { navigateMode: "replace" },
+  );
+  const filterType = parseFilterType(urlState.type);
+  const setFilterType = (type: FilterType) => setUrlState({ type });
 
   const filteredEntries = entries.filter((entry) => {
-    if (filterType === "witch") return entry.type === "fixed" || entry.type === "random";
+    if (filterType === "witch")
+      return entry.type === "fixed" || entry.type === "random";
     if (filterType === "baike") {
       return entry.type === "baike" || entry.type === "baike-en";
     }
     return entry.type === filterType;
   });
 
-  const allTypes: FilterType[] = ["witch", "segment", "sentence", "baike"];
   const filterLabels: Record<FilterType, string> = {
     witch: "🧙‍♀️ 女巫的毒药",
     segment: "📝 排段",
@@ -82,7 +83,7 @@ export function EntryListPage({ heading, entries }: EntryListPageProps) {
             {heading}
           </p>
           <div className="flex gap-3">
-            {allTypes.map((type) => (
+            {FILTER_TYPES.map((type) => (
               <button
                 key={type}
                 onClick={() => setFilterType(type)}

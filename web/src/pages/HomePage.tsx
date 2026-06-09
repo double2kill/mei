@@ -1,6 +1,9 @@
+import { PageStatus } from "../components/PageStatus";
+import { useScreenEntries } from "../hooks/useContentApi";
 import { EntryListPage } from "./EntryListPage";
-import { homeEntries } from "../data-helpers";
 
 export function HomePage() {
-  return <EntryListPage heading="湄开六度" entries={homeEntries} />;
+  const { entries, loading, error } = useScreenEntries("home");
+  if (loading || error) return <PageStatus loading={loading} error={error} />;
+  return <EntryListPage heading="湄开六度" entries={entries} />;
 }

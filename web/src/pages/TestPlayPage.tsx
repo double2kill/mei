@@ -8,7 +8,8 @@ import {
   saveRandomPoisonCount,
   thunderRandomRoundConfig,
 } from "../test/quiz-config";
-import { getQuizDef } from "../data-helpers";
+import { PageStatus } from "../components/PageStatus";
+import { useQuiz } from "../hooks/useContentApi";
 import { QuizPlayView } from "./QuizPlayView";
 import { SegmentPlayView } from "./SegmentPlayView";
 import { SentencePlayPage } from "./SentencePlayPage";
@@ -27,7 +28,7 @@ function resolvedTitle(raw: string | null, fallback: string) {
 
 export function TestPlayPage() {
   const { id } = useParams();
-  const def = useMemo(() => getQuizDef(id), [id]);
+  const { quiz: def, loading, error } = useQuiz(id);
   const [params] = useSearchParams();
 
   const title = useMemo(
@@ -62,6 +63,7 @@ export function TestPlayPage() {
   }, [def, poisonCount, title]);
 
   if (!id) return <Navigate to="/test/main" replace />;
+  if (loading || error) return <PageStatus loading={loading} error={error} />;
   if (!def) {
     return (
       <div className="flex min-h-0 flex-1 flex-col bg-zinc-50 dark:bg-black">
@@ -80,22 +82,25 @@ export function TestPlayPage() {
     );
   }
 
-  const settingsTo = def.settings ? `/test/${def.id}/settings` : undefined;
+  const settingsTo =
+    def.type === "fixed" && def.settings
+      ? `/test/${def.id}/settings`
+      : undefined;
 
   if (def.type === "segment") {
-    return <SegmentPlayView settingsTo={settingsTo} segmentQuizId={def.id} />;
+    return <SegmentPlayView quiz={def} />;
   }
 
   if (def.type === "sentence") {
-    return <SentencePlayPage sentenceQuizId={def.id} />;
+    return <SentencePlayPage quiz={def} />;
   }
 
   if (def.type === "baike") {
-    return <BaikePlayPage baikeQuizId={def.id} />;
+    return <BaikePlayPage quiz={def} />;
   }
 
   if (def.type === "baike-en") {
-    return <BaikeEnPlayPage baikeQuizId={def.id} />;
+    return <BaikeEnPlayPage quiz={def} />;
   }
 
   return (

@@ -1,6 +1,9 @@
+import { PageStatus } from "../components/PageStatus";
+import { useScreenEntries } from "../hooks/useContentApi";
 import { EntryListPage } from "./EntryListPage";
-import { evaEntries } from "../data-helpers";
 
 export function EvaPage() {
-  return <EntryListPage heading="Eva" entries={evaEntries} />;
+  const { entries, loading, error } = useScreenEntries("eva");
+  if (loading || error) return <PageStatus loading={loading} error={error} />;
+  return <EntryListPage heading="Eva" entries={entries} />;
 }

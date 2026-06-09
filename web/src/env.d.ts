@@ -1,5 +1,6 @@
 interface ImportMetaEnv {
   readonly BASE_URL: string;
+  readonly PUBLIC_API_BASE?: string;
   readonly PUBLIC_ZHIPU_API_KEY?: string;
   readonly PUBLIC_ZHIPU_MODEL?: string;
 }

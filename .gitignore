@@ -42,6 +42,7 @@ yarn-error.log*
 next-env.d.ts
 
 api/dist
+api/backups
 api/node_modules
 web/dist
 web/node_modules

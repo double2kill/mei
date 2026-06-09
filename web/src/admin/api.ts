@@ -99,4 +99,10 @@ export const QUIZ_TYPES: QuizType[] = [
   "baike-en",
 ];
 
-export const COVER_REFS = ["witch", "eva", "mei-warrior"] as const;
+export const COVER_REFS = [
+  "witch",
+  "eva",
+  "mei-warrior",
+  "mei-segment",
+  "mei-wiki",
+] as const;

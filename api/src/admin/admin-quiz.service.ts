@@ -5,10 +5,10 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 import { AppContentStore } from "../content/app-content.store";
+import { COVER_REF_SET } from "../content/cover-refs";
 import type { QuizRow, QuizType } from "../content/content.types";
 
 const ID_RE = /^[a-z0-9-]+$/;
-const COVER_REFS = new Set(["witch", "eva", "mei-warrior"]);
 const TYPES = new Set<QuizType>([
   "fixed",
   "random",
@@ -33,7 +33,7 @@ function normalizeQuiz(input: Partial<QuizRow> & { id: string }): QuizRow {
   }
   const quiz: QuizRow = { id, path: `/test/${id}`, title, type };
   if (input.coverRef) {
-    if (!COVER_REFS.has(input.coverRef)) {
+    if (!COVER_REF_SET.has(input.coverRef)) {
       throw new BadRequestException("invalid coverRef");
     }
     quiz.coverRef = input.coverRef;

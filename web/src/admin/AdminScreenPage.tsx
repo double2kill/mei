@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { coverSrcForRef } from "../data-helpers";
-import { fetchAdminQuizzes, fetchAdminScreen, saveAdminScreen } from "./api";
+import { COVER_REFS, fetchAdminQuizzes, fetchAdminScreen, saveAdminScreen } from "./api";
 import { AdminQuizCard } from "./AdminQuizCard";
 import { SortableCardGrid } from "./SortableCardGrid";
 import type { QuizDef, ScreenRow } from "../type";
@@ -148,9 +148,11 @@ export function AdminScreenPage() {
             onChange={(e) => setPickCover(e.target.value)}
             className="rounded-lg border border-zinc-200 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-950"
           >
-            <option value="witch">witch</option>
-            <option value="eva">eva</option>
-            <option value="mei-warrior">mei-warrior</option>
+            {COVER_REFS.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
           </select>
         </label>
         <button

@@ -1,7 +1,9 @@
 import {
   defaultCardCover,
   evaCardCover,
+  meiSegmentCardCover,
   meiWarriorCardCover,
+  meiWikiCardCover,
 } from "./data";
 import type { EntryDef, QuizEntry } from "./type";
 
@@ -9,6 +11,8 @@ const coverByRef: Record<string, string> = {
   witch: defaultCardCover,
   eva: evaCardCover,
   "mei-warrior": meiWarriorCardCover,
+  "mei-segment": meiSegmentCardCover,
+  "mei-wiki": meiWikiCardCover,
 };
 
 export function coverSrcForRef(ref: string) {

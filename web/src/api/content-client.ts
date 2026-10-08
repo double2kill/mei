@@ -7,7 +7,7 @@ function apiBase(): string {
 
 async function readJson<T>(res: Response): Promise<T> {
   if (!res.ok) {
-    throw new Error(`request failed: ${res.status}`);
+    throw new Error("服务不可用");
   }
   return res.json() as Promise<T>;
 }

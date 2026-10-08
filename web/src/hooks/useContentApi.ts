@@ -24,9 +24,9 @@ export function useScreenEntries(screen: "home" | "eva") {
         setEntries(toEntryList(data.entries));
         setError(null);
       })
-      .catch((err: unknown) => {
+      .catch(() => {
         if (cancelled) return;
-        setError(err instanceof Error ? err.message : "load failed");
+        setError("服务不可用");
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -68,10 +68,10 @@ export function useQuiz(id: string | undefined) {
         setQuiz(data);
         setError(null);
       })
-      .catch((err: unknown) => {
+      .catch(() => {
         if (cancelled) return;
         setQuiz(null);
-        setError(err instanceof Error ? err.message : "load failed");
+        setError("服务不可用");
       })
       .finally(() => {
         if (!cancelled) setLoading(false);

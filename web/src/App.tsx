@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { Route, Routes } from "react-router-dom";
 import { AdminLayout } from "./admin/AdminLayout";
 import { AdminLoginPage } from "./admin/AdminLoginPage";
@@ -5,13 +6,21 @@ import { AdminQuizEditPage } from "./admin/AdminQuizEditPage";
 import { AdminQuizListPage } from "./admin/AdminQuizListPage";
 import { AdminRoute } from "./admin/AdminRoute";
 import { AdminScreenPage } from "./admin/AdminScreenPage";
+import { PageStatus } from "./components/PageStatus";
 import { RootLayout } from "./RootLayout";
 import { HomePage } from "./pages/HomePage";
 import { TestPage } from "./pages/TestPage";
 import { RandomThunderPage } from "./pages/RandomThunderPage";
-import { TestSettingsPage } from "./pages/TestSettingsPage";
 import { EvaPage } from "./pages/EvaPage";
-import { TestPlayPage } from "./pages/TestPlayPage";
+
+const TestPlayPage = lazy(() =>
+  import("./pages/TestPlayPage").then((m) => ({ default: m.TestPlayPage })),
+);
+const TestSettingsPage = lazy(() =>
+  import("./pages/TestSettingsPage").then((m) => ({
+    default: m.TestSettingsPage,
+  })),
+);
 
 export default function App() {
   return (
@@ -29,14 +38,19 @@ export default function App() {
         path="/*"
         element={
           <RootLayout>
-            <Routes>
-              <Route path="/" element={<HomePage />} />
-              <Route path="/eva" element={<EvaPage />} />
-              <Route path="/test" element={<TestPage />} />
-              <Route path="/test/:id" element={<TestPlayPage />} />
-              <Route path="/test/:id/settings" element={<TestSettingsPage />} />
-              <Route path="/random" element={<RandomThunderPage />} />
-            </Routes>
+            <Suspense fallback={<PageStatus loading />}>
+              <Routes>
+                <Route path="/" element={<HomePage />} />
+                <Route path="/eva" element={<EvaPage />} />
+                <Route path="/test" element={<TestPage />} />
+                <Route path="/test/:id" element={<TestPlayPage />} />
+                <Route
+                  path="/test/:id/settings"
+                  element={<TestSettingsPage />}
+                />
+                <Route path="/random" element={<RandomThunderPage />} />
+              </Routes>
+            </Suspense>
           </RootLayout>
         }
       />

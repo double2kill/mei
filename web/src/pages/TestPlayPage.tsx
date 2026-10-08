@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { Link, Navigate, useParams, useSearchParams } from "react-router-dom";
 import {
   clampRandomPoisonCount,
@@ -14,7 +14,10 @@ import { QuizPlayView } from "./QuizPlayView";
 import { SegmentPlayView } from "./SegmentPlayView";
 import { SentencePlayPage } from "./SentencePlayPage";
 import { BaikePlayPage } from "./BaikePlayPage";
-import { BaikeEnPlayPage } from "./BaikeEnPlayPage";
+
+const BaikeEnPlayPage = lazy(() =>
+  import("./BaikeEnPlayPage").then((m) => ({ default: m.BaikeEnPlayPage })),
+);
 
 function resolvedTitle(raw: string | null, fallback: string) {
   if (!raw?.trim()) return fallback;
@@ -100,7 +103,11 @@ export function TestPlayPage() {
   }
 
   if (def.type === "baike-en") {
-    return <BaikeEnPlayPage quiz={def} />;
+    return (
+      <Suspense fallback={<PageStatus loading />}>
+        <BaikeEnPlayPage quiz={def} />
+      </Suspense>
+    );
   }
 
   return (

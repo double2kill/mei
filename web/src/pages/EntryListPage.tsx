@@ -1,5 +1,12 @@
 import useUrlState from "@ahooksjs/use-url-state";
 import { Link } from "react-router-dom";
+import {
+  availableFilters,
+  filterEntriesByType,
+  filterLabels,
+  parseFilterType,
+  type FilterType,
+} from "../entry-list-filters";
 import { quizTypeLabels, quizTypeStyles } from "../quiz-type-meta";
 import type { EntryDef } from "../type";
 
@@ -36,44 +43,17 @@ export type EntryListPageProps = {
   entries: EntryDef[];
 };
 
-const FILTER_TYPES = ["baike", "witch", "segment", "sentence"] as const;
-type FilterType = (typeof FILTER_TYPES)[number];
-
-const DEFAULT_FILTER: FilterType = "baike";
-
-function parseFilterType(value: unknown): FilterType {
-  if (
-    typeof value === "string" &&
-    FILTER_TYPES.includes(value as FilterType)
-  ) {
-    return value as FilterType;
-  }
-  return DEFAULT_FILTER;
-}
-
 export function EntryListPage({ heading, entries }: EntryListPageProps) {
-  const [urlState, setUrlState] = useUrlState<{ type: FilterType }>(
-    { type: DEFAULT_FILTER },
+  const available = availableFilters(entries);
+  const defaultType = available[0];
+  const [urlState, setUrlState] = useUrlState<{ type?: FilterType }>(
+    { type: defaultType },
     { navigateMode: "replace" },
   );
-  const filterType = parseFilterType(urlState.type);
+  const filterType =
+    parseFilterType(urlState.type, available) ?? defaultType ?? null;
   const setFilterType = (type: FilterType) => setUrlState({ type });
-
-  const filteredEntries = entries.filter((entry) => {
-    if (filterType === "witch")
-      return entry.type === "fixed" || entry.type === "random";
-    if (filterType === "baike") {
-      return entry.type === "baike" || entry.type === "baike-en";
-    }
-    return entry.type === filterType;
-  });
-
-  const filterLabels: Record<FilterType, string> = {
-    witch: "🧙‍♀️ 女巫的毒药",
-    segment: "📝 排段",
-    sentence: "✍️ 造句",
-    baike: "📖 百科",
-  };
+  const filteredEntries = filterEntriesByType(entries, filterType);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col justify-start bg-zinc-50 dark:bg-black">
@@ -82,21 +62,23 @@ export function EntryListPage({ heading, entries }: EntryListPageProps) {
           <p className="text-xl font-medium leading-8 text-zinc-800 sm:text-2xl dark:text-zinc-200">
             {heading}
           </p>
-          <div className="flex gap-3">
-            {FILTER_TYPES.map((type) => (
-              <button
-                key={type}
-                onClick={() => setFilterType(type)}
-                className={`rounded-xl px-6 py-3 text-base font-semibold transition ${
-                  filterType === type
-                    ? "bg-zinc-900 text-white dark:bg-zinc-700"
-                    : "bg-zinc-100 text-zinc-700 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
-                }`}
-              >
-                {filterLabels[type]}
-              </button>
-            ))}
-          </div>
+          {available.length > 1 ? (
+            <div className="flex flex-wrap gap-3">
+              {available.map((type) => (
+                <button
+                  key={type}
+                  onClick={() => setFilterType(type)}
+                  className={`rounded-xl px-6 py-3 text-base font-semibold transition ${
+                    filterType === type
+                      ? "bg-zinc-900 text-white dark:bg-zinc-700"
+                      : "bg-zinc-100 text-zinc-700 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
+                  }`}
+                >
+                  {filterLabels[type]}
+                </button>
+              ))}
+            </div>
+          ) : null}
         </div>
         <div className="grid w-full grid-cols-2 gap-3 sm:grid-cols-3">
           {filteredEntries.map((e) => (

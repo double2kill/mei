@@ -11,7 +11,7 @@ export const meiWarriorCardCover =
   (base.endsWith("/") ? base : `${base}/`) + "mei-warrior.png";
 
 export const meiSegmentCardCover =
-  (base.endsWith("/") ? base : `${base}/`) + "mei-segment.png";
+  (base.endsWith("/") ? base : `${base}/`) + "mei-segment.jpg";
 
 export const meiWikiCardCover =
   (base.endsWith("/") ? base : `${base}/`) + "mei-wiki.jpg";

@@ -24,7 +24,7 @@ export function SiteHeader() {
         </Link>
         <Link
           to="/admin/login"
-          className="shrink-0 rounded-lg px-2.5 py-1.5 text-xs font-medium text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
+          className="hidden shrink-0 rounded-lg px-2.5 py-1.5 text-xs font-medium text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600 lg:inline-block dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
         >
           后台
         </Link>

@@ -7,9 +7,12 @@ export function PageStatus({ loading, error }: PageStatusProps) {
   if (error) {
     return (
       <div className="flex min-h-dvh items-center justify-center bg-zinc-50 px-4 dark:bg-black">
-        <p className="text-center text-zinc-700 dark:text-zinc-300">
-          加载失败：{error}
-        </p>
+        <div className="text-center">
+          <p className="text-lg text-zinc-800 dark:text-zinc-200">服务不可用</p>
+          <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
+            请稍后再试，或联系管理员
+          </p>
+        </div>
       </div>
     );
   }

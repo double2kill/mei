@@ -114,6 +114,7 @@ export function TestPlayPage() {
     <QuizPlayView
       getRoundConfig={getRoundConfig}
       settingsTo={settingsTo}
+      compact={def.id === "eva"}
       roundRefreshSignal={def.type === "random" ? roundRefreshSignal : undefined}
       toolbar={
         def.type === "random" ? (

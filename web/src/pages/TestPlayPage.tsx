@@ -45,19 +45,15 @@ export function TestPlayPage() {
   }, [title]);
 
   const [poisonCount, setPoisonCount] = useState(loadRandomPoisonCount);
-  const [poisonCountInput, setPoisonCountInput] = useState(() =>
-    String(loadRandomPoisonCount()),
-  );
   const [roundRefreshSignal, setRoundRefreshSignal] = useState(0);
   const maxPoison = maxRandomPoisonCount();
 
-  const onSaveToolbar = () => {
-    const next = clampRandomPoisonCount(Number(poisonCountInput));
+  const onCommitPoisonCount = useCallback((n: number) => {
+    const next = clampRandomPoisonCount(n);
     setPoisonCount(next);
-    setPoisonCountInput(String(next));
     saveRandomPoisonCount(next);
-    setRoundRefreshSignal((n) => n + 1);
-  };
+    setRoundRefreshSignal((v) => v + 1);
+  }, []);
 
   const getRoundConfig = useCallback(() => {
     if (!def) return loadQuizConfig("main");
@@ -116,46 +112,15 @@ export function TestPlayPage() {
       settingsTo={settingsTo}
       compact={def.id === "eva"}
       roundRefreshSignal={def.type === "random" ? roundRefreshSignal : undefined}
-      toolbar={
-        def.type === "random" ? (
-          <div className="flex w-full flex-wrap items-center gap-2 font-medium">
-            <label className="flex flex-wrap items-center gap-2">
-              <span className="shrink-0 text-zinc-600 dark:text-zinc-400">
-                毒药数量
-              </span>
-              <input
-                type="number"
-                inputMode="numeric"
-                min={1}
-                max={maxPoison}
-                value={poisonCountInput}
-                onChange={(e) => setPoisonCountInput(e.target.value)}
-                onBlur={() => {
-                  if (!poisonCountInput.trim()) {
-                    setPoisonCountInput(String(poisonCount));
-                    return;
-                  }
-                  const next = clampRandomPoisonCount(Number(poisonCountInput));
-                  setPoisonCount(next);
-                  setPoisonCountInput(String(next));
-                }}
-                className="min-h-10 w-20 rounded-md border border-zinc-200 bg-zinc-50 px-2 text-center text-base tabular-nums text-zinc-900 dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-100"
-              />
-            </label>
-            <button
-              type="button"
-              onClick={onSaveToolbar}
-              className="touch-manipulation min-h-10 rounded-md bg-zinc-900 px-4 text-sm font-semibold text-white active:opacity-90 dark:bg-zinc-100 dark:text-zinc-900"
-            >
-              保存
-            </button>
-            <span className="text-zinc-500 dark:text-zinc-500">
-              保存后重新随机毒药位置
-            </span>
-          </div>
-        ) : undefined
+      poisonCountHost={
+        def.type === "random"
+          ? {
+              value: poisonCount,
+              max: maxPoison,
+              onCommit: onCommitPoisonCount,
+            }
+          : undefined
       }
     />
   );
 }
-
